@@ -237,6 +237,15 @@ void WorldSimApi::simPlotTransformsWithNames(const std::vector<Pose>& poses, con
 
 //------------------------------------------------- Char APIs -----------------------------------------------------------/
 
+std::vector<WorldSimApi::MeshResponse> WorldSimApi::getMeshes() const
+{
+	std::vector<WorldSimApi::MeshResponse> responses;
+	UAirBlueprintLib::RunCommandOnGameThread([&responses]() {
+		responses = UAirBlueprintLib::GetStaticMeshComponents();
+	}, true);
+	return responses;
+}
+
 void WorldSimApi::charSetFaceExpression(const std::string& expression_name, float value, const std::string& character_name)
 {
     AAirSimCharacter* character = getAirSimCharacter(character_name);

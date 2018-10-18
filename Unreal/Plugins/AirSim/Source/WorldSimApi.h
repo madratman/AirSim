@@ -11,6 +11,7 @@ class WorldSimApi : public msr::airlib::WorldSimApiBase {
 public:
     typedef msr::airlib::Pose Pose;
     typedef msr::airlib::Vector3r Vector3r;
+	typedef msr::airlib::MeshResponse MeshResponse;
 
     WorldSimApi(ASimModeBase* simmode);
     virtual ~WorldSimApi() = default;
@@ -46,6 +47,7 @@ public:
     virtual void simPlotStrings(const std::vector<std::string>& strings, const std::vector<Vector3r>& positions, float scale, const std::vector<float>& color_rgba, float duration) override;
     virtual void simPlotTransforms(const std::vector<Pose>& poses, float scale, float thickness, float duration, bool is_persistent) override;
     virtual void simPlotTransformsWithNames(const std::vector<Pose>& poses, const std::vector<std::string>& names, float tf_scale, float tf_thickness, float text_scale, const std::vector<float>& text_color_rgba, float duration) override;
+	virtual std::vector<MeshResponse> getMeshes() const override;
 
     //----------- APIs to control ACharacter in scene ----------/
     virtual void charSetFaceExpression(const std::string& expression_name, float value, const std::string& character_name) override;
