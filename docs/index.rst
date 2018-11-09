@@ -1,5 +1,57 @@
-Welcome to airsim's documentation!
-==================================
+Welcome to AirSim
+=================
+
+AirSim is a simulator for drones, cars and more, built on `Unreal
+Engine`_. It is open-source, cross platform and supports
+hardware-in-loop with popular flight controllers such as PX4 for
+physically and visually realistic simulations. It is developed as an
+Unreal plugin that can simply be dropped into any Unreal environment you
+want.
+
+Our goal is to develop AirSim as a platform for AI research to
+experiment with deep learning, computer vision and reinforcement
+learning algorithms for autonomous vehicles. For this purpose, AirSim
+also exposes APIs to retrieve data and control vehicles in a platform
+independent way.
+
+
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="//www.youtu.be/-WfTr1-OBGQ" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+|AirSim Drone Demo Video|
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="//www.youtu.be/gnz1X3UNM5Y" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
+|AirSim Car Demo Video|
+
+
+Getting started
+-------------------------------------
+Windows
+~~~~~~~
+
+-  `Binaries <apis.rst>`_
+-  `Build from source`_ <build_windows.rst>
+
+Linux
+~~~~~
+
+-  `Build from source <docs/build_linux.rst>`__
+
+Building from source
+
+- How to use
+- Reference 
+ - API
+ - Settings
+- FAQ
 
 .. toctree::
    :maxdepth: 1
