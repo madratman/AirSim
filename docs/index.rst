@@ -84,21 +84,21 @@ get state, control the
 
 .. _Unreal Engine: https://www.unrealengine.com/
 .. _New environments: https://github.com/Microsoft/AirSim/releases/tag/v1.2.1
-.. _NoDisplay view mode: https://github.com/Microsoft/AirSim/blob/master/settings.md#viewmode
-.. _Lidar Sensor: lidar.md
+.. _NoDisplay view mode: https://github.com/Microsoft/AirSim/blob/master/settings.html#viewmode
+.. _Lidar Sensor: lidar.html
 .. _Formula Student Technion Driverless: https://github.com/Microsoft/AirSim/wiki/technion
-.. _Multi-Vehicle Capability: multi_vehicle.md
+.. _Multi-Vehicle Capability: multi_vehicle.html
 .. _ROS publisher: https://github.com/Microsoft/AirSim/pull/1135
 .. _Arducopter Solo Support: https://github.com/Microsoft/AirSim/pull/1387
-.. _API Upgrade: upgrade_apis.md
-.. _Settings Upgrade: upgrade_settings.md
-.. _upgrade instructions: unreal_upgrade.md
-.. _Changelog: CHANGELOG.md
+.. _API Upgrade: upgrade_apis.html
+.. _Settings Upgrade: upgrade_settings.html
+.. _upgrade instructions: unreal_upgrade.html
+.. _Changelog: CHANGELOG.html
 .. _Download binaries: use_precompiled
-.. _Build it: build_windows.md
-.. _SimMode setting: settings.md#simmode
-.. _ComputerVision mode: image_apis.md#computer-vision-mode-1
-.. _More details: remote_control.md
+.. _Build it: build_windows.html
+.. _SimMode setting: settings.html#simmode
+.. _ComputerVision mode: image_apis.html#computer-vision-mode-1
+.. _More details: remote_control.html
 
 .. |AirSim Drone Demo Video| image:: images/demo_video.png
    :target: https://youtu.be/-WfTr1-OBGQ
