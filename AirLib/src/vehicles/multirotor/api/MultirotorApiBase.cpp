@@ -199,7 +199,6 @@ bool MultirotorApiBase::moveOnPath(const vector<Vector3r>& path, float velocity,
     float lookahead_error_increasing = 0;
     float lookahead_error = 0;
     Waiter waiter(getCommandPeriod(), timeout_sec, getCancelToken());
-
     //initialize next path position
     setNextPathPosition(path3d, path_segs, cur_path_loc, lookahead + lookahead_error, next_path_loc);
     float overshoot = 0;
@@ -210,7 +209,10 @@ bool MultirotorApiBase::moveOnPath(const vector<Vector3r>& path, float velocity,
         ) { //current position is approximately at the last end point
 
         float seg_velocity = path_segs.at(next_path_loc.seg_index).seg_velocity;
+	
         float path_length_remaining = path_length - path_segs.at(cur_path_loc.seg_index).seg_path_length - cur_path_loc.offset;
+		//Utils::log(Utils::stringf("seg_velocity : %f, path_length_remainin : %f", seg_velocity, path_length_remaining));
+
         if (seg_velocity > getMultirotorApiParams().min_vel_for_breaking && path_length_remaining <= breaking_dist) {
             seg_velocity = getMultirotorApiParams().breaking_vel;
             //Utils::logMessage("path_length_remaining = %f, Switched to breaking vel %f", path_length_remaining, seg_velocity);
@@ -544,11 +546,19 @@ void MultirotorApiBase::moveToPathPosition(const Vector3r& dest, float velocity,
 
     //what is the distance we will travel at this velocity?
     float expected_dist = velocity * getCommandPeriod();
+	//float command_period = getCommandPeriod();
+//	Utils::log(Utils::stringf("velocity : %f, expected_dist : %f, command_period : %f", velocity, expected_dist, command_period));
 
     //get velocity vector
     const Vector3r cur = getPosition();
     const Vector3r cur_dest = dest - cur;
     float cur_dest_norm = cur_dest.norm();
+
+	Utils::log(Utils::stringf("cur, x=%f, y=%f, z=%f ", cur.x(), cur.y(), cur.z()));
+	Utils::log(Utils::stringf("dest, x=%f, y=%f, z=%f ", dest.x(), dest.y(), dest.z()));
+	Utils::log(Utils::stringf("dest - cur, x=%f, y=%f, z=%f ", cur_dest.x(), cur_dest.y(), cur_dest.z()));
+	Utils::log("\n");
+	//Utils::log(Utils::stringf("cur_dest_norm : %f", cur_dest_norm));
 
     //yaw for the direction of travel
     adjustYaw(cur_dest, drivetrain, yaw_mode);
@@ -559,7 +569,7 @@ void MultirotorApiBase::moveToPathPosition(const Vector3r& dest, float velocity,
         velocity_vect = Vector3r::Zero();
     else if (cur_dest_norm >= expected_dist) {
         velocity_vect = (cur_dest / cur_dest_norm) * velocity;
-        //Utils::logMessage("velocity_vect=%s", VectorMath::toString(velocity_vect).c_str());
+		//Utils::log(Utils::stringf"velocity_vect=%s", VectorMath::toString(velocity_vect).c_str());
     }
     else { //cur dest is too close than the distance we would travel
            //generate velocity vector that is same size as cur_dest_norm / command period
@@ -570,10 +580,20 @@ void MultirotorApiBase::moveToPathPosition(const Vector3r& dest, float velocity,
 
     //send commands
     //try to maintain altitude if path was in XY plan only, velocity based control is not as good
-    if (std::abs(cur.z() - dest.z()) <= getDistanceAccuracy()) //for paths in XY plan current code leaves z untouched, so we can compare with strict equality
-        moveByVelocityZInternal(velocity_vect.x(), velocity_vect.y(), dest.z(), yaw_mode);
-    else
-        moveByVelocityInternal(velocity_vect.x(), velocity_vect.y(), velocity_vect.z(), yaw_mode);
+	if (std::abs(cur.z() - dest.z()) <= getDistanceAccuracy()) //for paths in XY plan current code leaves z untouched, so we can compare with strict equality
+	{
+		//Utils::log(Utils::stringf("moveByVelocityZInternal called, x_vel=%f, y_vel=%f, dest.z=%f \n", velocity_vect.x(), velocity_vect.y(), dest.z()));////
+		Utils::log(Utils::stringf("moveByVelocityInternal called, x_vel=%f, y_vel=%f, z_vel=%f \n", velocity_vect.x(), velocity_vect.y(), velocity_vect.z()));
+		Utils::log("\n");
+		moveByVelocityInternal(velocity_vect.x(), velocity_vect.y(), velocity_vect.z(), yaw_mode);
+	//	moveByVelocityZInternal(velocity_vect.x(), velocity_vect.y(), dest.z(), yaw_mode);
+	}
+	else
+	{
+		Utils::log(Utils::stringf("moveByVelocityInternal called, x_vel=%f, y_vel=%f, z_vel=%f \n", velocity_vect.x(), velocity_vect.y(), velocity_vect.z()));
+		Utils::log("\n");
+		moveByVelocityInternal(velocity_vect.x(), velocity_vect.y(), velocity_vect.z(), yaw_mode);
+	}
 }
 
 bool MultirotorApiBase::setSafety(SafetyEval::SafetyViolationType enable_reasons, float obs_clearance, SafetyEval::ObsAvoidanceStrategy obs_startegy,
