@@ -1,34 +1,16 @@
-#include "common/common_utils/StrictMode.hpp"
-STRICT_MODE_OFF
-#ifndef RPCLIB_MSGPACK
-#define RPCLIB_MSGPACK clmdep_msgpack
-#endif // !RPCLIB_MSGPACK
-#include "rpc/rpc_error.h"
-STRICT_MODE_ON
+#include "ros/ros.h"
+#include "airsim_ros_wrapper.h"
 
-#include "vehicles/multirotor/api/MultirotorRpcLibClient.hpp"
-#include "common/common_utils/FileSystem.hpp"
-#include <iostream>
-#include <chrono>
-
-int main() 
+int main(int argc, char ** argv)
 {
-    using namespace msr::airlib;
+    ros::init(argc, argv, "airsim_node");
+    ros::NodeHandle nh;
+    ros::NodeHandle nh_private("~");
 
-    msr::airlib::MultirotorRpcLibClient client;
-    typedef ImageCaptureBase::ImageRequest ImageRequest;
-    typedef ImageCaptureBase::ImageResponse ImageResponse;
-    typedef ImageCaptureBase::ImageType ImageType;
-    typedef common_utils::FileSystem FileSystem;
-    
-    try {
-        client.confirmConnection();
-    }
+    AirsimROSWrapper airsim_ros_wrapper(nh, nh_private);
+    airsim_ros_wrapper.initialize_airsim();
+    airsim_ros_wrapper.initialize_ros();
 
-    catch (rpc::rpc_error&  e) {
-        std::string msg = e.get_error().as<std::string>();
-        std::cout << "Exception raised by the API, something went wrong." << std::endl << msg << std::endl;
-    }
-
+    ros::spin();
     return 0;
 }

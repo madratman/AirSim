@@ -14,17 +14,35 @@ STRICT_MODE_ON
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <image_transport/image_transport.h>
+#include <geometry_msgs/Twist.h>
+#include <std_srvs/Empty.h>
 
 class AirsimROSWrapper
 {
 public:
     AirsimROSWrapper(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
-    virtual ~AirsimROSWrapper() {}; // who will really derive this tho
+    ~AirsimROSWrapper() {}; // who will really derive this tho
 
-    void initialize();
+    void initialize_airsim();
+    void initialize_ros();
+
+    /// ROS subscriber callbacks
+    void vel_cmd_world_frame_cb(const geometry_msgs::Twist &msg);
+    void vel_cmd_body_frame_cb(const geometry_msgs::Twist &msg);
+
+    /// ROS service callbacks
+    bool takeoff_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool land_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool reset_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
 private:
     msr::airlib::MultirotorRpcLibClient airsim_client_;
+
+    ros::NodeHandle nh_;
+    ros::NodeHandle nh_private_;
+
+    /// ROS params
+    double vel_cmd_duration_;
 
     /// ROS camera messages
     sensor_msgs::CameraInfo stereo_left_info_;
@@ -32,9 +50,9 @@ private:
     sensor_msgs::CameraInfo mono_center_info_;
 
     /// ROS camera publishers
-    image_transport::ImageTransport it_;
-    image_transport::Publisher left_image_pub_;
-    image_transport::Publisher right_image_pub_;
+    // image_transport::ImageTransport it_;
+    // image_transport::Publisher left_image_pub_;
+    // image_transport::Publisher right_image_pub_;
 
     /// ROS other publishers
     ros::Publisher odom_ned_pub_;
