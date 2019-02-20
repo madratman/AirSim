@@ -7,8 +7,17 @@ WSL works fine as well
 
 
 ##  Build
+- Build AirSim and 
 ```
-mkdir -p airsim_ros_ws/src && cd $_   
+cd $(AIRSIM_ROOT);
+./setup.sh;
+./build.sh;
+cd $(AIRSIM_ROOT)/Unity;
+./build.sh;
+```
+
+```
+mkdir -p airsim_ros_ws/src && cd $_
 git clone https://github.com/madratman/airsim_roscpp_pkgs.git
 cd ../
 catkin_make # or catkin build
