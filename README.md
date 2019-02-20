@@ -1,5 +1,6 @@
 # airsim_roscpp_pkgs
 
+For internal use, don't use this in open source version as of now
 ##  Setup 
 Ubuntu 16.04 + ROS Kinetic. 
 WSL works fine as well
