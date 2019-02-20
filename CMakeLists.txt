@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.11.0)
 project(airsim_ros_pkgs)
 
-set(AIRSIM_ROOT /projectsym/AirSim_wsl/AirSim)
+# set(AIRSIM_ROOT /projectsym/AirSim_wsl/AirSim)
+set(AIRSIM_ROOT /home/madratman/projects/AirSim)
 # set(CMAKE_CXX_COMPILER /usr/bin/clang++-5.0)
 # set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
@@ -52,6 +53,7 @@ include_directories(
 )
 
 link_directories(${AIRSIM_ROOT}/build_debug/output/lib)
+link_directories(${AIRSIM_ROOT}/llvm-build/lib)
 
 add_library(lib_airsim_ros_wrapper src/airsim_ros_wrapper.cpp)
 # add_dependencies(lib_airsim_ros_wrapper ${catkin_EXPORTED_TARGETS})
