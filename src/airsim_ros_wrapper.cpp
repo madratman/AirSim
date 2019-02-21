@@ -8,6 +8,15 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
+constexpr char AirsimROSWrapper::CAM_YML_NAME[];
+constexpr char AirsimROSWrapper::WIDTH_YML_NAME[];
+constexpr char AirsimROSWrapper::HEIGHT_YML_NAME[];
+constexpr char AirsimROSWrapper::K_YML_NAME[];
+constexpr char AirsimROSWrapper::D_YML_NAME[];
+constexpr char AirsimROSWrapper::R_YML_NAME[];
+constexpr char AirsimROSWrapper::P_YML_NAME[];
+constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
+
 AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHandle &nh_private)
     : nh_(nh), nh_private_(nh_private)
 {
@@ -39,6 +48,9 @@ void AirsimROSWrapper::initialize_ros()
     left_image_pub_ = it.advertise("/airsim/zed/right/image_raw", 1)
     right_image_pub_ = it.advertise("/airsim/zed/left/image_raw", 1)
 */
+
+    nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
+    nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
 
     takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_callback, this);
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_callback, this);
@@ -166,7 +178,7 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
 
     front_left_tf_stamped.header.stamp = ros::Time::now();
     front_left_tf_stamped.header.frame_id = "world";
-    front_left_tf_stamped.child_frame_id = "cam_front_left";
+    front_left_tf_stamped.child_frame_id = "airsim/cam_front_left";
     front_left_tf_stamped.transform.translation.x = img_response.at(0).camera_position.x();
     front_left_tf_stamped.transform.translation.y = img_response.at(0).camera_position.y();
     front_left_tf_stamped.transform.translation.z = img_response.at(0).camera_position.z();
@@ -176,9 +188,17 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     front_left_tf_stamped.transform.rotation.w = img_response.at(0).camera_orientation.w();
     tf_broadcaster_.sendTransform(front_left_tf_stamped);
 
+    sensor_msgs::CameraInfo airsim_cam_info_left;
+    airsim_cam_info_left.header.stamp = front_left_tf_stamped.header.stamp;
+    airsim_cam_info_left.header.frame_id = "airsim/cam_front_left";
+    read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_left);
+
+    geometry_msgs::TransformStamped front_right_tf_stamped;
+
+    // todo front_right is not needed.
     front_right_tf_stamped.header.stamp = ros::Time::now();
     front_right_tf_stamped.header.frame_id = "world";
-    front_right_tf_stamped.child_frame_id = "cam_front_right";
+    front_right_tf_stamped.child_frame_id = "airsim/cam_front_right";
     front_right_tf_stamped.transform.translation.x = img_response.at(1).camera_position.x();
     front_right_tf_stamped.transform.translation.y = img_response.at(1).camera_position.y();
     front_right_tf_stamped.transform.translation.z = img_response.at(1).camera_position.z();
@@ -187,4 +207,47 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     front_right_tf_stamped.transform.rotation.z = img_response.at(1).camera_orientation.z();
     front_right_tf_stamped.transform.rotation.w = img_response.at(1).camera_orientation.w();
     tf_broadcaster_.sendTransform(front_right_tf_stamped);
+}
+
+
+
+void AirsimROSWrapper::convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m)
+{
+    int rows, cols;
+    rows = node["rows"].as<int>();
+    cols = node["cols"].as<int>();
+    const YAML::Node& data = node["data"];
+    for (int i = 0; i < rows*cols; ++i)
+    {
+        m.data[i] = data[i].as<double>();
+    }
+}
+
+void AirsimROSWrapper::read_params_from_yaml_and_fill_cam_info_msg(const std::string& file_name, sensor_msgs::CameraInfo& cam_info)
+{
+    std::ifstream fin(file_name.c_str());
+    YAML::Node doc = YAML::Load(fin);
+
+    cam_info.width = doc[WIDTH_YML_NAME].as<int>();
+    cam_info.height = doc[HEIGHT_YML_NAME].as<int>();
+
+    SimpleMatrix K_(3, 3, &cam_info.K[0]);
+    convert_yaml_to_simple_mat(doc[K_YML_NAME], K_);
+    SimpleMatrix R_(3, 3, &cam_info.R[0]);
+    convert_yaml_to_simple_mat(doc[R_YML_NAME], R_);
+    SimpleMatrix P_(3, 4, &cam_info.P[0]);
+    convert_yaml_to_simple_mat(doc[P_YML_NAME], P_);
+
+    cam_info.distortion_model = doc[DMODEL_YML_NAME].as<std::string>();
+
+    const YAML::Node& D_node = doc[D_YML_NAME];
+    int D_rows, D_cols;
+    D_rows = D_node["rows"].as<int>();
+    D_cols = D_node["cols"].as<int>();
+    const YAML::Node& D_data = D_node["data"];
+    cam_info.D.resize(D_rows*D_cols);
+    for (int i = 0; i < D_rows*D_cols; ++i)
+    {
+        cam_info.D[i] = D_data[i].as<float>();
+    }
 }

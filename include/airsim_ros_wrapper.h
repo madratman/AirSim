@@ -20,11 +20,23 @@ STRICT_MODE_ON
 #include <opencv2/opencv.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include "yaml-cpp/yaml.h"
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
 typedef msr::airlib::ImageCaptureBase::ImageResponse ImageResponse;
 typedef msr::airlib::ImageCaptureBase::ImageType ImageType;
+
+struct SimpleMatrix
+{
+    int rows;
+    int cols;
+    double* data;
+
+    SimpleMatrix(int rows, int cols, double* data)
+        : rows(rows), cols(cols), data(data)
+    {}
+};
 
 class AirsimROSWrapper
 {
@@ -47,6 +59,9 @@ public:
     void process_and_publish_img_response(const std::vector<ImageResponse>& img_response);
     void img_response_timer_callback(const ros::TimerEvent& event);
     void manual_decode_rgb(const ImageResponse &img_response, cv::Mat &mat);
+
+    void read_params_from_yaml_and_fill_cam_info_msg(const std::string& file_name, sensor_msgs::CameraInfo& cam_info);
+    void convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m); // todo ugly
 
 private:
     msr::airlib::MultirotorRpcLibClient airsim_client_;
@@ -88,4 +103,16 @@ private:
     ros::ServiceServer takeoff_srvr_;
     ros::ServiceServer land_srvr_;
     ros::ServiceServer reset_srvr_;
+
+    static constexpr char CAM_YML_NAME[]    = "camera_name";
+    static constexpr char WIDTH_YML_NAME[]  = "image_width";
+    static constexpr char HEIGHT_YML_NAME[] = "image_height";
+    static constexpr char K_YML_NAME[]      = "camera_matrix";
+    static constexpr char D_YML_NAME[]      = "distortion_coefficients";
+    static constexpr char R_YML_NAME[]      = "rectification_matrix";
+    static constexpr char P_YML_NAME[]      = "projection_matrix";
+    static constexpr char DMODEL_YML_NAME[] = "distortion_model";
+
+    std::string front_left_calib_file_;
+    std::string front_right_calib_file_;
 };

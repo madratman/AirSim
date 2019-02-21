@@ -59,7 +59,7 @@ link_directories(${AIRSIM_ROOT}/Unity/linux-build)
 
 add_library(lib_airsim_ros_wrapper src/airsim_ros_wrapper.cpp)
 # add_dependencies(lib_airsim_ros_wrapper ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper ${OpenCV_LIBS})
+target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper ${OpenCV_LIBS} yaml-cpp)
 
 add_executable(airsim_node src/airsim_node.cpp)
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
