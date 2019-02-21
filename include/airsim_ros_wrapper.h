@@ -62,6 +62,7 @@ public:
 
     void read_params_from_yaml_and_fill_cam_info_msg(const std::string& file_name, sensor_msgs::CameraInfo& cam_info);
     void convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m); // todo ugly
+    void publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id);
 
 private:
     msr::airlib::MultirotorRpcLibClient airsim_client_;
@@ -81,9 +82,9 @@ private:
     ros::Timer airsim_img_response_timer_;
 
     /// ROS camera messages
-    sensor_msgs::CameraInfo stereo_left_info_;
-    sensor_msgs::CameraInfo stereo_right_info_;
-    sensor_msgs::CameraInfo mono_center_info_;
+    sensor_msgs::CameraInfo airsim_cam_info_front_left_;
+    sensor_msgs::CameraInfo airsim_cam_info_front_right_;
+    sensor_msgs::CameraInfo airsim_cam_info_front_mono_;
 
     /// ROS camera publishers
     // image_transport::ImageTransport it_;

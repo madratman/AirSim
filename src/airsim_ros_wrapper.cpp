@@ -52,6 +52,13 @@ void AirsimROSWrapper::initialize_ros()
     nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
     nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
 
+    // fill camera info msg from YAML calib file. todo error check path
+    read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_front_left_);
+    airsim_cam_info_front_left_.header.frame_id = "airsim/cam_front_left";
+
+    read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, airsim_cam_info_front_right_);
+    airsim_cam_info_front_right_.header.frame_id = "airsim/cam_front_right";
+
     takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_callback, this);
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_callback, this);
     reset_srvr_ = nh_private_.advertiseService("reset",&AirsimROSWrapper::reset_srv_callback, this);
@@ -65,6 +72,9 @@ void AirsimROSWrapper::initialize_ros()
     double update_airsim_img_response_every_n_sec = 0.05;
     // nh_private_.param("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec, update_airsim_img_response_every_n_sec);
     airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_callback, this);
+
+ 
+
 }
 
 // todo minor: error check. if state is not landed, return error. 
@@ -174,42 +184,32 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     cv::Mat bgr_front_right = cv::Mat();
     manual_decode_rgb(img_response.at(1), bgr_front_right);
 
-    geometry_msgs::TransformStamped front_left_tf_stamped;
+    ros::Time curr_ros_time = ros::Time::now();
 
-    front_left_tf_stamped.header.stamp = ros::Time::now();
-    front_left_tf_stamped.header.frame_id = "world";
-    front_left_tf_stamped.child_frame_id = "airsim/cam_front_left";
-    front_left_tf_stamped.transform.translation.x = img_response.at(0).camera_position.x();
-    front_left_tf_stamped.transform.translation.y = img_response.at(0).camera_position.y();
-    front_left_tf_stamped.transform.translation.z = img_response.at(0).camera_position.z();
-    front_left_tf_stamped.transform.rotation.x = img_response.at(0).camera_orientation.x();
-    front_left_tf_stamped.transform.rotation.y = img_response.at(0).camera_orientation.y();
-    front_left_tf_stamped.transform.rotation.z = img_response.at(0).camera_orientation.z();
-    front_left_tf_stamped.transform.rotation.w = img_response.at(0).camera_orientation.w();
-    tf_broadcaster_.sendTransform(front_left_tf_stamped);
+    std_msgs::Header tf_header;
+    tf_header.stamp = curr_ros_time;
+    tf_header.frame_id = "world";
+    publish_camera_tf(img_response.at(0), tf_header, "airsim/cam_front_left");
+    publish_camera_tf(img_response.at(1), tf_header, "airsim/cam_front_right");
 
-    sensor_msgs::CameraInfo airsim_cam_info_left;
-    airsim_cam_info_left.header.stamp = front_left_tf_stamped.header.stamp;
-    airsim_cam_info_left.header.frame_id = "airsim/cam_front_left";
-    read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_left);
-
-    geometry_msgs::TransformStamped front_right_tf_stamped;
-
-    // todo front_right is not needed.
-    front_right_tf_stamped.header.stamp = ros::Time::now();
-    front_right_tf_stamped.header.frame_id = "world";
-    front_right_tf_stamped.child_frame_id = "airsim/cam_front_right";
-    front_right_tf_stamped.transform.translation.x = img_response.at(1).camera_position.x();
-    front_right_tf_stamped.transform.translation.y = img_response.at(1).camera_position.y();
-    front_right_tf_stamped.transform.translation.z = img_response.at(1).camera_position.z();
-    front_right_tf_stamped.transform.rotation.x = img_response.at(1).camera_orientation.x();
-    front_right_tf_stamped.transform.rotation.y = img_response.at(1).camera_orientation.y();
-    front_right_tf_stamped.transform.rotation.z = img_response.at(1).camera_orientation.z();
-    front_right_tf_stamped.transform.rotation.w = img_response.at(1).camera_orientation.w();
-    tf_broadcaster_.sendTransform(front_right_tf_stamped);
+    airsim_cam_info_front_left_.header.stamp = curr_ros_time; // update timestamp of cam info msg
+    airsim_cam_info_front_right_.header.stamp = curr_ros_time; // update timestamp of cam info msg
 }
 
-
+void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id)
+{
+    geometry_msgs::TransformStamped cam_tf;
+    cam_tf.header = header;
+    cam_tf.child_frame_id = child_frame_id;
+    cam_tf.transform.translation.x = img_response.camera_position.x();
+    cam_tf.transform.translation.y = img_response.camera_position.y();
+    cam_tf.transform.translation.z = img_response.camera_position.z();
+    cam_tf.transform.rotation.x = img_response.camera_orientation.x();
+    cam_tf.transform.rotation.y = img_response.camera_orientation.y();
+    cam_tf.transform.rotation.z = img_response.camera_orientation.z();
+    cam_tf.transform.rotation.w = img_response.camera_orientation.w();
+    tf_broadcaster_.sendTransform(cam_tf);
+}
 
 void AirsimROSWrapper::convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m)
 {
