@@ -8,8 +8,6 @@ int main(int argc, char ** argv)
     ros::NodeHandle nh_private("~");
 
     AirsimROSWrapper airsim_ros_wrapper(nh, nh_private);
-    airsim_ros_wrapper.initialize_airsim();
-    airsim_ros_wrapper.initialize_ros();
 
     ros::spin();
     return 0;

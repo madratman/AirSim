@@ -20,7 +20,7 @@ message(STATUS "found RPC_LIB_INCLUDES=${RPC_LIB_INCLUDES}")
 set(CMAKE_CXX_STANDARD 11) 
 # set(CMAKE_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 # find_package(Eigen3 REQUIRED) 
-# find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   image_transport
@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   std_srvs
   tf2
+  tf2_ros
 )
 
 catkin_package(
@@ -49,6 +50,7 @@ include_directories(
   ${RPC_LIB_INCLUDES}
   ${AIRSIM_ROOT}/MavLinkCom/include
   ${AIRSIM_ROOT}/MavLinkCom/common_utils
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(${AIRSIM_ROOT}/build_debug/output/lib)
@@ -57,7 +59,7 @@ link_directories(${AIRSIM_ROOT}/Unity/linux-build)
 
 add_library(lib_airsim_ros_wrapper src/airsim_ros_wrapper.cpp)
 # add_dependencies(lib_airsim_ros_wrapper ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper)
+target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper ${OpenCV_LIBS})
 
 add_executable(airsim_node src/airsim_node.cpp)
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
