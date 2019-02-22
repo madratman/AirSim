@@ -38,6 +38,7 @@ void AirsimROSWrapper::initialize_ros()
     vel_cmd_duration_ = 0.05;
     front_left_img_raw_pub_ = it_.advertise("front_left/image_raw", 1);
     front_right_img_raw_pub_ = it_.advertise("front_right/image_raw", 1);
+    front_left_depth_planar_pub_ = it_.advertise("front_left/depth_planar", 1);
 
     nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
     nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
@@ -257,9 +258,16 @@ void AirsimROSWrapper::manual_decode_rgb(const ImageResponse &img_response, cv::
                 img_response.image_data_uint8[row*camera_0_img_width*4 + 4*col + 0]);
         }
     }
+}
 
-    // cv::imshow("camera_0_img", mat);
-    // cv::waitKey(1);
+void AirsimROSWrapper::manual_decode_depth(const ImageResponse &img_response, cv::Mat &mat)
+{
+    mat = cv::Mat(img_response.height, img_response.width, CV_32FC1, cv::Scalar(0));
+    int camera_0_img_width = img_response.width;
+
+    for (int row = 0; row < img_response.height; row++)
+        for (int col = 0; col < camera_0_img_width; col++)
+            mat.at<float>(row, col) = img_response.image_data_float[row*camera_0_img_width + col];
 }
 
 void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageResponse>& img_response)
@@ -273,26 +281,40 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     //     cv::Mat camera_0_img = cv::imdecode(img_response.at(0).image_data_uint8, CV_LOAD_IMAGE_COLOR);
     // #endif
 
+    // decode images and convert to ROS image msgs
     cv::Mat bgr_front_left = cv::Mat();
     manual_decode_rgb(img_response.at(0), bgr_front_left);
     sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_left).toImageMsg();
-    front_left_img_raw_pub_.publish(bgr_front_left_msg);
 
     cv::Mat bgr_front_right = cv::Mat();
     manual_decode_rgb(img_response.at(1), bgr_front_right);
     sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
-    front_right_img_raw_pub_.publish(bgr_front_right_msg);
 
+    cv::Mat front_left_depth_planar = cv::Mat();
+    manual_decode_depth(img_response.at(2), front_left_depth_planar);
+    // cv::Mat front_left_depth_planar = cv::imdecode(img_response.at(2).image_data_float.date(), cv::IMREAD_GRAYSCALE);
+    sensor_msgs::ImagePtr front_left_depth_planar_msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", front_left_depth_planar).toImageMsg();
+
+    // put ros time now in headers. 
+    // TODO use airsim time if ros param /use_sim_time is set to true
     ros::Time curr_ros_time = ros::Time::now();
+    bgr_front_left_msg->header.stamp = curr_ros_time;
+    bgr_front_right_msg->header.stamp = curr_ros_time;
+    front_left_depth_planar_msg->header.stamp = curr_ros_time;
+    airsim_cam_info_front_left_.header.stamp = curr_ros_time; // update timestamp of saved cam info msgs
+    airsim_cam_info_front_right_.header.stamp = curr_ros_time;
 
+    // publish camera transforms
     std_msgs::Header tf_header;
     tf_header.stamp = curr_ros_time;
     tf_header.frame_id = "world";
     publish_camera_tf(img_response.at(0), tf_header, "airsim/cam_front_left");
     publish_camera_tf(img_response.at(1), tf_header, "airsim/cam_front_right");
 
-    airsim_cam_info_front_left_.header.stamp = curr_ros_time; // update timestamp of cam info msg
-    airsim_cam_info_front_right_.header.stamp = curr_ros_time; // update timestamp of cam info msg
+    // publish everything
+    front_right_img_raw_pub_.publish(bgr_front_right_msg);
+    front_left_img_raw_pub_.publish(bgr_front_left_msg);
+    front_left_depth_planar_pub_.publish(front_left_depth_planar_msg);
 }
 
 void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id)
