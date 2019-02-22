@@ -104,6 +104,11 @@ private:
     ros::NodeHandle nh_private_;
 
     // const std::vector<ImageResponse> img_response_;
+    /// control commands received from last callback
+    // todo make a struct for control cmd, perhaps line with airlib's API 
+    bool has_vel_cmd_;
+    geometry_msgs::Twist vel_cmd_;
+    string vel_cmd_yaw_mode_; 
 
     /// ROS tf
     tf2_ros::TransformBroadcaster tf_broadcaster_;
@@ -137,6 +142,9 @@ private:
     ros::Publisher vehicle_state_pub_;
 
     /// ROS Subscribers
+    // ros::CallbackQueue img_callback_queue_
+    // ros::SubscribeOptions sub_ops_;
+
     ros::Subscriber vel_cmd_body_frame_sub_;
     ros::Subscriber vel_cmd_world_frame_sub_;
     ros::Subscriber gimbal_angle_quat_cmd_sub_;
