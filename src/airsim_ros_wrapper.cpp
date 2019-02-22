@@ -243,31 +243,33 @@ void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
 
 }
 
-void AirsimROSWrapper::manual_decode_rgb(const ImageResponse &img_response, cv::Mat &mat)
+cv::Mat AirsimROSWrapper::manual_decode_rgb(const ImageResponse &img_response)
 {
-    mat = cv::Mat(img_response.height, img_response.width, CV_8UC3, cv::Scalar(0, 0, 0));
-    int camera_0_img_width = img_response.width;
+    cv::Mat mat(img_response.height, img_response.width, CV_8UC3, cv::Scalar(0, 0, 0));
+    int img_width = img_response.width;
 
     for (int row = 0; row < img_response.height; row++)
     {
-        for (int col = 0; col < camera_0_img_width; col++)
+        for (int col = 0; col < img_width; col++)
         {
             mat.at<cv::Vec3b>(row, col) = cv::Vec3b(
-                img_response.image_data_uint8[row*camera_0_img_width*4 + 4*col + 2],
-                img_response.image_data_uint8[row*camera_0_img_width*4 + 4*col + 1],
-                img_response.image_data_uint8[row*camera_0_img_width*4 + 4*col + 0]);
+                img_response.image_data_uint8[row*img_width*4 + 4*col + 2],
+                img_response.image_data_uint8[row*img_width*4 + 4*col + 1],
+                img_response.image_data_uint8[row*img_width*4 + 4*col + 0]);
         }
     }
+    return mat;
 }
 
-void AirsimROSWrapper::manual_decode_depth(const ImageResponse &img_response, cv::Mat &mat)
+cv::Mat AirsimROSWrapper::manual_decode_depth(const ImageResponse &img_response)
 {
-    mat = cv::Mat(img_response.height, img_response.width, CV_32FC1, cv::Scalar(0));
-    int camera_0_img_width = img_response.width;
+    cv::Mat mat(img_response.height, img_response.width, CV_32FC1, cv::Scalar(0));
+    int img_width = img_response.width;
 
     for (int row = 0; row < img_response.height; row++)
-        for (int col = 0; col < camera_0_img_width; col++)
-            mat.at<float>(row, col) = img_response.image_data_float[row*camera_0_img_width + col];
+        for (int col = 0; col < img_width; col++)
+            mat.at<float>(row, col) = img_response.image_data_float[row*img_width + col];
+    return mat;
 }
 
 void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageResponse>& img_response)
@@ -275,24 +277,20 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // todo why is cv::imdecode not working
     // #if CV_MAJOR_VERSION==3
             // cv::Mat camera_0_img = cv::imdecode(img_response.at(0).image_data_uint8, cv::IMREAD_UNCHANGED);
-            // auto rgb_right = cv::imdecode(response[1].image_data_uint8, cv::IMREAD_COLOR);
-            // auto depth = cv::imdecode(response[2].image_data_uint8, cv::IMREAD_GRAYSCALE);
+            // auto rgb_right = cv::imdecode(img_response.at(1).image_data_uint8, cv::IMREAD_COLOR);
+            // auto depth = cv::imdecode(img_response.at(2).image_data_uint8, cv::IMREAD_GRAYSCALE);
     // #else
     //     cv::Mat camera_0_img = cv::imdecode(img_response.at(0).image_data_uint8, CV_LOAD_IMAGE_COLOR);
     // #endif
 
     // decode images and convert to ROS image msgs
-    cv::Mat bgr_front_left = cv::Mat();
-    manual_decode_rgb(img_response.at(0), bgr_front_left);
+    cv::Mat bgr_front_left = manual_decode_rgb(img_response.at(0));
     sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_left).toImageMsg();
 
-    cv::Mat bgr_front_right = cv::Mat();
-    manual_decode_rgb(img_response.at(1), bgr_front_right);
+    cv::Mat bgr_front_right = manual_decode_rgb(img_response.at(1));
     sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
 
-    cv::Mat front_left_depth_planar = cv::Mat();
-    manual_decode_depth(img_response.at(2), front_left_depth_planar);
-    // cv::Mat front_left_depth_planar = cv::imdecode(img_response.at(2).image_data_float.date(), cv::IMREAD_GRAYSCALE);
+    cv::Mat front_left_depth_planar = manual_decode_depth(img_response.at(2));
     sensor_msgs::ImagePtr front_left_depth_planar_msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", front_left_depth_planar).toImageMsg();
 
     // put ros time now in headers. 

@@ -85,8 +85,8 @@ public:
     /// camera helper methods
     // TODO migrate to image_tranport camera publisher https://answers.ros.org/question/278602/how-to-use-camera_info_manager-to-publish-camera_info/
     void process_and_publish_img_response(const std::vector<ImageResponse>& img_response);
-    void manual_decode_rgb(const ImageResponse &img_response, cv::Mat &mat);
-    void manual_decode_depth(const ImageResponse &img_response, cv::Mat &mat);
+    cv::Mat manual_decode_rgb(const ImageResponse &img_response);
+    cv::Mat manual_decode_depth(const ImageResponse &img_response);
     void read_params_from_yaml_and_fill_cam_info_msg(const std::string& file_name, sensor_msgs::CameraInfo& cam_info);
     void convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m); // todo ugly
 
