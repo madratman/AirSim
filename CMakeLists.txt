@@ -23,7 +23,9 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenCV REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   image_transport
+  mavros_msgs
   message_generation
   nav_msgs
   roscpp
@@ -33,7 +35,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf2
   tf2_ros
-  mavros_msgs
 )
 
 add_message_files(

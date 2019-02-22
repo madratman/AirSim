@@ -6,35 +6,35 @@ STRICT_MODE_OFF //todo what does this do?
 #include "rpc/rpc_error.h"
 STRICT_MODE_ON
 
-#include "vehicles/multirotor/api/MultirotorRpcLibClient.hpp"
 #include "common/common_utils/FileSystem.hpp"
-#include <iostream>
-#include <chrono>
 #include "ros/ros.h"
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <image_transport/image_transport.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <std_srvs/Empty.h>
-#include <opencv2/opencv.hpp>
-#include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
+#include "vehicles/multirotor/api/MultirotorRpcLibClient.hpp"
 #include "yaml-cpp/yaml.h"
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/distortion_models.h>
-#include <ros/console.h>
-#include <math.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <mavros_msgs/State.h>
-#include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/GimbalAngleEulerCmd.h>
-#include <airsim_ros_pkgs/SetLocalPosition.h>
+#include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/SetGlobalPosition.h>
+#include <airsim_ros_pkgs/SetLocalPosition.h>
+#include <chrono>
+#include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Twist.h>
+#include <image_transport/image_transport.h>
+#include <iostream>
+#include <math.h>
+#include <mavros_msgs/State.h>
+#include <nav_msgs/Odometry.h>
+#include <opencv2/opencv.hpp>
+#include <ros/console.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/distortion_models.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/NavSatFix.h>
+#include <std_srvs/Empty.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
@@ -121,9 +121,11 @@ private:
     sensor_msgs::CameraInfo airsim_cam_info_front_mono_;
 
     /// ROS camera publishers
-    // image_transport::ImageTransport it_;
-    // image_transport::Publisher left_image_pub_;
-    // image_transport::Publisher right_image_pub_;
+    image_transport::ImageTransport it_;
+    image_transport::Publisher front_left_img_raw_pub_;
+    image_transport::Publisher front_right_img_raw_pub_;
+    image_transport::Publisher front_left_depth_planar_pub_;
+
     ros::Publisher cam_0_pose_pub_; 
 
     /// ROS other publishers

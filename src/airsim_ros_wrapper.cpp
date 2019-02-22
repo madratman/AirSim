@@ -10,7 +10,7 @@ constexpr char AirsimROSWrapper::P_YML_NAME[];
 constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
 
 AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHandle &nh_private)
-    : nh_(nh), nh_private_(nh_private)
+    : nh_(nh), nh_private_(nh_private), it_(nh_private_)
 {
     initialize_airsim();
     initialize_ros();
@@ -36,10 +36,8 @@ void AirsimROSWrapper::initialize_ros()
 {
     // ros params
     vel_cmd_duration_ = 0.05;
-/*  it_(nh_);
-    left_image_pub_ = it.advertise("/airsim/zed/right/image_raw", 1)
-    right_image_pub_ = it.advertise("/airsim/zed/left/image_raw", 1)
-*/
+    front_left_img_raw_pub_ = it_.advertise("front_left/image_raw", 1);
+    front_right_img_raw_pub_ = it_.advertise("front_right/image_raw", 1);
 
     nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
     nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
@@ -276,9 +274,13 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
 
     cv::Mat bgr_front_left = cv::Mat();
     manual_decode_rgb(img_response.at(0), bgr_front_left);
+    sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_left).toImageMsg();
+    front_left_img_raw_pub_.publish(bgr_front_left_msg);
 
     cv::Mat bgr_front_right = cv::Mat();
     manual_decode_rgb(img_response.at(1), bgr_front_right);
+    sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
+    front_right_img_raw_pub_.publish(bgr_front_right_msg);
 
     ros::Time curr_ros_time = ros::Time::now();
 
