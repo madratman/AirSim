@@ -33,6 +33,8 @@ STRICT_MODE_ON
 #include <mavros_msgs/State.h>
 #include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/GimbalAngleEulerCmd.h>
+#include <airsim_ros_pkgs/SetLocalPosition.h>
+#include <airsim_ros_pkgs/SetGlobalPosition.h>
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
@@ -60,8 +62,8 @@ public:
     void initialize_ros();
 
     /// ROS timer callbacks
-    void img_response_timer_callback(const ros::TimerEvent& event); // update images from airsim_client_ every nth sec
-    void drone_state_timer_callback(const ros::TimerEvent& event); // update drone state from airsim_client_ every nth sec
+    void img_response_timer_cb(const ros::TimerEvent& event); // update images from airsim_client_ every nth sec
+    void drone_state_timer_cb(const ros::TimerEvent& event); // update drone state from airsim_client_ every nth sec
 
     /// ROS subscriber callbacks
     void vel_cmd_world_frame_cb(const geometry_msgs::Twist &msg);
@@ -70,9 +72,12 @@ public:
     void gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg);
 
     /// ROS service callbacks
-    bool takeoff_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-    bool land_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-    bool reset_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool takeoff_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool land_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+    bool reset_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+    bool set_local_position_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response); 
+    bool set_global_position_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response); 
 
     /// ROS tf broadcasters
     void publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id);
@@ -122,6 +127,7 @@ private:
     ros::Publisher cam_0_pose_pub_; 
 
     /// ROS other publishers
+    ros::Publisher clock_pub_;
     ros::Publisher odom_local_ned_pub_;
     ros::Publisher global_gps_pub_;
     ros::Publisher attitude_euler_pub_;

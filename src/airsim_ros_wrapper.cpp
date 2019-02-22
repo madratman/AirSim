@@ -51,10 +51,11 @@ void AirsimROSWrapper::initialize_ros()
     read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, airsim_cam_info_front_right_);
     airsim_cam_info_front_right_.header.frame_id = "airsim/cam_front_right";
 
-    takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_callback, this);
-    land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_callback, this);
-    reset_srvr_ = nh_private_.advertiseService("reset",&AirsimROSWrapper::reset_srv_callback, this);
+    takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_cb, this);
+    land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_cb, this);
+    reset_srvr_ = nh_private_.advertiseService("reset",&AirsimROSWrapper::reset_srv_cb, this);
 
+    // clock_pub_ = nh_private_.advertise<rosgraph_msgs::Clock>("clock", 10); // mimic gazebo's /use_sim_time feature
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
     global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
@@ -67,25 +68,25 @@ void AirsimROSWrapper::initialize_ros()
     double update_airsim_img_response_every_n_sec = 0.05;
     double update_airsim_control_every_n_sec = 0.05;
     // nh_private_.param("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec, update_airsim_img_response_every_n_sec);
-    airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_callback, this);
-    airsim_control_update_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_control_every_n_sec), &AirsimROSWrapper::drone_state_timer_callback, this);
+    airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_cb, this);
+    airsim_control_update_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_control_every_n_sec), &AirsimROSWrapper::drone_state_timer_cb, this);
 }
 
 // todo minor: error check. if state is not landed, return error. 
-bool AirsimROSWrapper::takeoff_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool AirsimROSWrapper::takeoff_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     airsim_client_.takeoffAsync()->waitOnLastTask();
     return true; //todo
 }
 
 // todo minor: error check. if state is not in air, return error. 
-bool AirsimROSWrapper::land_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool AirsimROSWrapper::land_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     airsim_client_.landAsync()->waitOnLastTask();
     return true; //todo
 }
 
-bool AirsimROSWrapper::reset_srv_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+bool AirsimROSWrapper::reset_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     airsim_client_.reset();
     return true; //todo
@@ -186,7 +187,7 @@ mavros_msgs::State AirsimROSWrapper::get_vehicle_state_msg(msr::airlib::Multirot
     return vehicle_state_msg;
 }
 
-void AirsimROSWrapper::drone_state_timer_callback(const ros::TimerEvent& event)
+void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 {
     // get drone state from airsim
     msr::airlib::MultirotorState drone_state = airsim_client_.getMultirotorState();
@@ -213,7 +214,7 @@ void AirsimROSWrapper::drone_state_timer_callback(const ros::TimerEvent& event)
 
 }
 
-void AirsimROSWrapper::img_response_timer_callback(const ros::TimerEvent& event)
+void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
 {    
     std::vector<ImageRequest> img_request = { 
         ImageRequest("front_left", ImageType::Scene,false, false), 
@@ -343,4 +344,15 @@ void AirsimROSWrapper::read_params_from_yaml_and_fill_cam_info_msg(const std::st
     {
         cam_info.D[i] = D_data[i].as<float>();
     }
+}
+
+
+bool AirsimROSWrapper::set_local_position_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response)
+{
+
+}
+
+bool AirsimROSWrapper::set_global_position_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response) 
+{
+    
 }

@@ -42,6 +42,12 @@ add_message_files(
   GimbalAngleQuatCmd.msg
 )
 
+add_service_files(
+  FILES
+  SetGlobalPosition.srv
+  SetLocalPosition.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
