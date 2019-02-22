@@ -24,6 +24,7 @@ find_package(OpenCV REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   image_transport
+  message_generation
   nav_msgs
   roscpp
   rospy
@@ -32,6 +33,19 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf2
   tf2_ros
+  mavros_msgs
+)
+
+add_message_files(
+  FILES
+  GimbalAngleEulerCmd.msg
+  GimbalAngleQuatCmd.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
 )
 
 catkin_package(

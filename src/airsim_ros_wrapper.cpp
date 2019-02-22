@@ -1,12 +1,4 @@
 #include <airsim_ros_wrapper.h>
-#include <sensor_msgs/image_encodings.h>
-#include <sensor_msgs/distortion_models.h>
-#include <ros/console.h>
-#include <math.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <nav_msgs/Odometry.h>
 
 constexpr char AirsimROSWrapper::CAM_YML_NAME[];
 constexpr char AirsimROSWrapper::WIDTH_YML_NAME[];
@@ -63,18 +55,20 @@ void AirsimROSWrapper::initialize_ros()
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_callback, this);
     reset_srvr_ = nh_private_.advertiseService("reset",&AirsimROSWrapper::reset_srv_callback, this);
 
-    odom_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_enu", 10);
-    odom_enu_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_ned", 10);
+    vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
+    odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
+    global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
     cam_0_pose_pub_ = nh_private_.advertise<geometry_msgs::PoseStamped> ("/cam_0/pose", 10);
     vel_cmd_body_frame_sub_ = nh_private_.subscribe("vel_cmd_body_frame", 50, &AirsimROSWrapper::vel_cmd_body_frame_cb, this); // todo ros::TransportHints().tcpNoDelay();
     vel_cmd_world_frame_sub_ = nh_private_.subscribe("vel_cmd_world_frame", 50, &AirsimROSWrapper::vel_cmd_world_frame_cb, this);
+    gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
+    gimbal_angle_euler_cmd_sub_ = nh_private_.subscribe("gimbal_angle_euler_cmd", 50, &AirsimROSWrapper::gimbal_angle_euler_cmd_cb, this);
 
     double update_airsim_img_response_every_n_sec = 0.05;
+    double update_airsim_control_every_n_sec = 0.05;
     // nh_private_.param("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec, update_airsim_img_response_every_n_sec);
     airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_callback, this);
-
- 
-
+    airsim_control_update_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_control_every_n_sec), &AirsimROSWrapper::drone_state_timer_callback, this);
 }
 
 // todo minor: error check. if state is not landed, return error. 
@@ -97,19 +91,31 @@ bool AirsimROSWrapper::reset_srv_callback(std_srvs::Empty::Request& request, std
     return true; //todo
 }
 
+tf2::Quaternion AirsimROSWrapper::get_tf2_quat(const msr::airlib::Quaternionr& airlib_quat)
+{
+    return tf2::Quaternion(airlib_quat.x(), airlib_quat.y(), airlib_quat.z(), airlib_quat.w());
+}
+
+msr::airlib::Quaternionr AirsimROSWrapper::get_airlib_quat(const geometry_msgs::Quaternion& geometry_msgs_quat)
+{
+    return msr::airlib::Quaternionr(geometry_msgs_quat.w, geometry_msgs_quat.x, geometry_msgs_quat.y, geometry_msgs_quat.z); 
+}
+
+msr::airlib::Quaternionr AirsimROSWrapper::get_airlib_quat(const tf2::Quaternion& tf2_quat)
+{
+    return msr::airlib::Quaternionr(tf2_quat.w(), tf2_quat.x(), tf2_quat.y(), tf2_quat.z()); 
+}
+
 void AirsimROSWrapper::vel_cmd_body_frame_cb(const geometry_msgs::Twist &msg)
 {
     double roll, pitch, yaw;
-    auto drone_state = airsim_client_.getMultirotorState();
-    auto quaternion_ned = drone_state.kinematics_estimated.pose.orientation; // airsim uses wxyz
-    tf2::Matrix3x3(tf2::Quaternion(quaternion_ned.x(), quaternion_ned.y(), 
-        quaternion_ned.z(), quaternion_ned.w())).getRPY(roll, pitch, yaw); // ros uses xyzw
+    auto drone_state = airsim_client_.getMultirotorState(); // todo use the state from drone state timer callback
+    tf2::Matrix3x3(get_tf2_quat(drone_state.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
 
     double vx_body = (msg.linear.x * cos(yaw)) - (msg.linear.y * sin(yaw));
     double vy_body = (msg.linear.x * sin(yaw)) + (msg.linear.y * cos(yaw));
 
-    // rospy.loginfo("sending vel cmd body frame vx: {} vy: {} vz: {} ang.z: {} duration: {}".format(vx_body, vy_body, msg.linear.z, msg.angular.z, self.vel_cmd_duration))
-
+    // todo save vel commands in class member in this callback. but actually send them in the drone state update timer callback    
     airsim_client_.moveByVelocityAsync(vx_body, vy_body, msg.linear.z, vel_cmd_duration_, 
         msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
 }
@@ -118,6 +124,93 @@ void AirsimROSWrapper::vel_cmd_world_frame_cb(const geometry_msgs::Twist &msg)
 {
     airsim_client_.moveByVelocityAsync(msg.linear.x, msg.linear.y, msg.linear.z, vel_cmd_duration_, 
         msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
+}
+
+void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg)
+{
+    // airsim uses wxyz
+    msr::airlib::Quaternionr orientation = get_airlib_quat(gimbal_angle_quat_cmd_msg.orientation);
+    airsim_client_.simSetCameraOrientation(gimbal_angle_quat_cmd_msg.camera_name, orientation, gimbal_angle_quat_cmd_msg.vehicle_name);
+}
+
+void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg)
+{
+    // airsim uses wxyz
+    tf2::Quaternion tf2_quat(gimbal_angle_euler_cmd_msg.yaw, gimbal_angle_euler_cmd_msg.pitch, gimbal_angle_euler_cmd_msg.roll);
+    msr::airlib::Quaternionr orientation = get_airlib_quat(tf2_quat);
+    airsim_client_.simSetCameraOrientation(gimbal_angle_euler_cmd_msg.camera_name, orientation, gimbal_angle_euler_cmd_msg.vehicle_name);
+}
+
+// todo to pass param and fill, or return value. 
+nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state)
+{
+    nav_msgs::Odometry odom_ned_msg;
+    // odom_ned_msg.header.stamp = ;
+    odom_ned_msg.child_frame_id = "/airsim/odom_local_ned"; // todo make param
+
+    odom_ned_msg.pose.pose.position.x = drone_state.getPosition().x();
+    odom_ned_msg.pose.pose.position.y = drone_state.getPosition().y();
+    odom_ned_msg.pose.pose.position.z = drone_state.getPosition().z();
+    odom_ned_msg.pose.pose.orientation.x = drone_state.getOrientation().x();
+    odom_ned_msg.pose.pose.orientation.y = drone_state.getOrientation().y();
+    odom_ned_msg.pose.pose.orientation.z = drone_state.getOrientation().z();
+    odom_ned_msg.pose.pose.orientation.w = drone_state.getOrientation().w();
+
+    odom_ned_msg.twist.twist.linear.x = drone_state.kinematics_estimated.twist.linear.x();
+    odom_ned_msg.twist.twist.linear.y = drone_state.kinematics_estimated.twist.linear.y();
+    odom_ned_msg.twist.twist.linear.z = drone_state.kinematics_estimated.twist.linear.z();
+    odom_ned_msg.twist.twist.angular.x = drone_state.kinematics_estimated.twist.angular.x();
+    odom_ned_msg.twist.twist.angular.y = drone_state.kinematics_estimated.twist.angular.y();
+    odom_ned_msg.twist.twist.angular.z = drone_state.kinematics_estimated.twist.angular.z();
+
+    return odom_ned_msg;
+}
+
+sensor_msgs::NavSatFix AirsimROSWrapper::get_gps_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state)
+{
+    sensor_msgs::NavSatFix gps_msg;
+    gps_msg.latitude = drone_state.gps_location.latitude;
+    gps_msg.longitude = drone_state.gps_location.longitude; 
+    gps_msg.altitude = drone_state.gps_location.altitude;
+    return gps_msg;
+}
+
+mavros_msgs::State AirsimROSWrapper::get_vehicle_state_msg(msr::airlib::MultirotorState &drone_state)
+{
+    mavros_msgs::State vehicle_state_msg;
+    // vehicle_state_msg.connected = true; // not reqd
+    vehicle_state_msg.armed = true; // todo is_armed_
+    // vehicle_state_msg.guided; // not reqd 
+    // vehicle_state_msg.mode; // todo
+    // vehicle_state_msg.system_status; // not reqd
+    return vehicle_state_msg;
+}
+
+void AirsimROSWrapper::drone_state_timer_callback(const ros::TimerEvent& event)
+{
+    // get drone state from airsim
+    msr::airlib::MultirotorState drone_state = airsim_client_.getMultirotorState();
+    ros::Time curr_ros_time = ros::Time::now();
+
+    // convert airsim drone state to ROS msgs
+    nav_msgs::Odometry odom_ned_msg = get_odom_msg_from_airsim_state(drone_state);
+    odom_ned_msg.header.stamp = curr_ros_time;
+
+    sensor_msgs::NavSatFix gps_msg = get_gps_msg_from_airsim_state(drone_state);
+    gps_msg.header.stamp = curr_ros_time;
+
+    mavros_msgs::State vehicle_state_msg = get_vehicle_state_msg(drone_state);
+
+    // publish to ROS!  
+    odom_local_ned_pub_.publish(odom_ned_msg);
+    global_gps_pub_.publish(gps_msg);
+    vehicle_state_pub_.publish(vehicle_state_msg);
+
+    // TODO send control commands received from ros subscriber
+    // airsim_client_.simSetCameraOrientation(gimbal_angle_cmd_msg.camera_name, orientation, gimbal_angle_cmd_msg.vehicle_name);
+    // airsim_client_.moveByVelocityAsync(msg.linear.x, msg.linear.y, msg.linear.z, vel_cmd_duration_, 
+    //  msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
+
 }
 
 void AirsimROSWrapper::img_response_timer_callback(const ros::TimerEvent& event)
