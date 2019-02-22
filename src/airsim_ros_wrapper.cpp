@@ -45,11 +45,11 @@ void AirsimROSWrapper::initialize_ros()
     nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
 
     // fill camera info msg from YAML calib file. todo error check path
-    read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_front_left_);
-    airsim_cam_info_front_left_.header.frame_id = "airsim/cam_front_left";
+    // read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_front_left_);
+    // airsim_cam_info_front_left_.header.frame_id = "airsim/cam_front_left";
 
-    read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, airsim_cam_info_front_right_);
-    airsim_cam_info_front_right_.header.frame_id = "airsim/cam_front_right";
+    // read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, airsim_cam_info_front_right_);
+    // airsim_cam_info_front_right_.header.frame_id = "airsim/cam_front_right";
 
     takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_cb, this);
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_cb, this);
@@ -65,8 +65,8 @@ void AirsimROSWrapper::initialize_ros()
     gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
     gimbal_angle_euler_cmd_sub_ = nh_private_.subscribe("gimbal_angle_euler_cmd", 50, &AirsimROSWrapper::gimbal_angle_euler_cmd_cb, this);
 
-    double update_airsim_img_response_every_n_sec = 0.05;
-    double update_airsim_control_every_n_sec = 0.05;
+    double update_airsim_img_response_every_n_sec = 0.01;
+    double update_airsim_control_every_n_sec = 0.01;
     // nh_private_.param("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec, update_airsim_img_response_every_n_sec);
     airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_cb, this);
     airsim_control_update_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_control_every_n_sec), &AirsimROSWrapper::drone_state_timer_cb, this);
@@ -224,11 +224,13 @@ void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
 
     try
     {
-        std::cout << "call\n";
+        // std::cout << "AirsimROSWrapper::img_response_timer_cb\n";
         const std::vector<ImageResponse>& img_response = airsim_client_.simGetImages(img_request);
   
         if (img_response.size() == img_request.size()) 
         {
+            
+            // std::cout << "publishing now \n";
             process_and_publish_img_response(img_response);
         }
     }
