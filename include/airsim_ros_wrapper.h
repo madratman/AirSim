@@ -62,20 +62,19 @@ struct VelCmd
     msr::airlib::YawMode yaw_mode;
     std::string vehicle_name;
 
-    VelCmd() : 
-        x(0), y(9), z(0), 
-        drivetrain(msr::airlib::DrivetrainType::MaxDegreeOfFreedom), 
-        yaw_mode(msr::airlib::YawMode(true, 0)), 
-        vehicle_name("") {};
+    // VelCmd() : 
+    //     x(0), y(0), z(0), 
+    //     vehicle_name("") {drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
+    //             yaw_mode = msr::airlib::YawMode();};
 
-    VelCmd(const double &x, const double &y, const double &z, 
-            const msr::airlib::DrivetrainType &drivetrain, 
-            const msr::airlib::YawMode &yaw_mode,
-            const std::string &vehicle_name) : 
-        x(x), y(y), z(z), 
-        drivetrain(drivetrain), 
-        yaw_mode(yaw_mode), 
-        vehicle_name(vehicle_name) {};
+    // VelCmd(const double &x, const double &y, const double &z, 
+    //         msr::airlib::DrivetrainType drivetrain, 
+    //         const msr::airlib::YawMode &yaw_mode,
+    //         const std::string &vehicle_name) : 
+    //     x(x), y(y), z(z), 
+    //     drivetrain(drivetrain), 
+    //     yaw_mode(yaw_mode), 
+    //     vehicle_name(vehicle_name) {};
 };
 
 struct GimbalCmd
@@ -84,12 +83,12 @@ struct GimbalCmd
     std::string camera_name;
     msr::airlib::Quaternionr target_quat;
 
-    GimbalCmd() : vehicle_name(vehicle_name), camera_name(camera_name), target_quat(msr::airlib::Quaternionr()) {}
+    // GimbalCmd() : vehicle_name(vehicle_name), camera_name(camera_name), target_quat(msr::airlib::Quaternionr(1,0,0,0)) {}
 
-    GimbalCmd(const std::string &vehicle_name, 
-            const std::string &camera_name, 
-            const msr::airlib::Quaternionr &target_quat) : 
-            vehicle_name(vehicle_name), camera_name(camera_name), target_quat(target_quat) {};
+    // GimbalCmd(const std::string &vehicle_name, 
+    //         const std::string &camera_name, 
+    //         const msr::airlib::Quaternionr &target_quat) : 
+    //         vehicle_name(vehicle_name), camera_name(camera_name), target_quat(target_quat) {};
 };
 
 class AirsimROSWrapper

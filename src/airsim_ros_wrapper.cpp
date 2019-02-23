@@ -16,8 +16,8 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     initialize_ros();
 
     // intitialize placeholder control commands
-    vel_cmd_ = VelCmd();
-    gimbal_cmd_ = GimbalCmd();
+    // vel_cmd_ = VelCmd();
+    // gimbal_cmd_ = GimbalCmd();
 }
 
 void AirsimROSWrapper::initialize_airsim()
@@ -117,22 +117,28 @@ void AirsimROSWrapper::vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
     auto drone_state = airsim_client_.getMultirotorState(); // todo use the state from drone state timer callback
     tf2::Matrix3x3(get_tf2_quat(drone_state.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
 
-    double vx_body = (msg.twist.linear.x * cos(yaw)) - (msg.twist.linear.y * sin(yaw));
-    double vy_body = (msg.twist.linear.x * sin(yaw)) + (msg.twist.linear.y * cos(yaw));
-
-    vel_cmd_ = VelCmd(vx_body, vy_body, msg.twist.linear.z,
-                        msr::airlib::DrivetrainType::MaxDegreeOfFreedom,
-                        msr::airlib::YawMode(true, msg.twist.angular.z),
-                        msg.vehicle_name);
+    // todo do actual body frame?
+    vel_cmd_.x = (msg.twist.linear.x * cos(yaw)) - (msg.twist.linear.y * sin(yaw)); //body frame assuming zero pitch roll
+    vel_cmd_.y = (msg.twist.linear.x * sin(yaw)) + (msg.twist.linear.y * cos(yaw)); //body frame
+    vel_cmd_.z = msg.twist.linear.z;
+    vel_cmd_.drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
+    // vel_cmd_.yaw_mode = msr::airlib::YawMode(true, msg.twist.angular.z);
+    vel_cmd_.yaw_mode.is_rate = true;
+    vel_cmd_.yaw_mode.yaw_or_rate = msg.twist.angular.z;
+    vel_cmd_.vehicle_name = msg.vehicle_name;
     has_vel_cmd_ = true;
 }
 
 void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
 {
-    vel_cmd_ = VelCmd(msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z,
-                        msr::airlib::DrivetrainType::MaxDegreeOfFreedom,
-                        msr::airlib::YawMode(true, msg.twist.angular.z),
-                        msg.vehicle_name);
+    vel_cmd_.x = msg.twist.linear.x;
+    vel_cmd_.y = msg.twist.linear.y;
+    vel_cmd_.z = msg.twist.linear.z;
+    vel_cmd_.drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
+    // vel_cmd_.yaw_mode = msr::airlib::YawMode(true, msg.twist.angular.z);
+    vel_cmd_.yaw_mode.is_rate = true;
+    vel_cmd_.yaw_mode.yaw_or_rate = msg.twist.angular.z;
+    vel_cmd_.vehicle_name = msg.vehicle_name;
     has_vel_cmd_ = true;
 }
 
@@ -220,7 +226,6 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
     odom_local_ned_pub_.publish(odom_ned_msg);
     global_gps_pub_.publish(gps_msg);
     vehicle_state_pub_.publish(vehicle_state_msg);
-
 
     // send control commands from the last callback to airsim
     // airsim_client_.simSetCameraOrientation(gimbal_angle_cmd_msg.camera_name, orientation, gimbal_angle_cmd_msg.vehicle_name);
