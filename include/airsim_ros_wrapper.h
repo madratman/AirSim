@@ -14,6 +14,7 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/SetGlobalPosition.h>
 #include <airsim_ros_pkgs/SetLocalPosition.h>
+#include <airsim_ros_pkgs/VelCmd.h>
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -52,6 +53,45 @@ struct SimpleMatrix
     {}
 };
 
+struct VelCmd
+{
+    double x;
+    double y;
+    double z;
+    msr::airlib::DrivetrainType drivetrain;
+    msr::airlib::YawMode yaw_mode;
+    std::string vehicle_name;
+
+    VelCmd() : 
+        x(0), y(9), z(0), 
+        drivetrain(msr::airlib::DrivetrainType::MaxDegreeOfFreedom), 
+        yaw_mode(msr::airlib::YawMode(true, 0)), 
+        vehicle_name("") {};
+
+    VelCmd(const double &x, const double &y, const double &z, 
+            const msr::airlib::DrivetrainType &drivetrain, 
+            const msr::airlib::YawMode &yaw_mode,
+            const std::string &vehicle_name) : 
+        x(x), y(y), z(z), 
+        drivetrain(drivetrain), 
+        yaw_mode(yaw_mode), 
+        vehicle_name(vehicle_name) {};
+};
+
+struct GimbalCmd
+{
+    std::string vehicle_name;
+    std::string camera_name;
+    msr::airlib::Quaternionr target_quat;
+
+    GimbalCmd() : vehicle_name(vehicle_name), camera_name(camera_name), target_quat(msr::airlib::Quaternionr()) {}
+
+    GimbalCmd(const std::string &vehicle_name, 
+            const std::string &camera_name, 
+            const msr::airlib::Quaternionr &target_quat) : 
+            vehicle_name(vehicle_name), camera_name(camera_name), target_quat(target_quat) {};
+};
+
 class AirsimROSWrapper
 {
 public:
@@ -66,8 +106,8 @@ public:
     void drone_state_timer_cb(const ros::TimerEvent& event); // update drone state from airsim_client_ every nth sec
 
     /// ROS subscriber callbacks
-    void vel_cmd_world_frame_cb(const geometry_msgs::Twist &msg);
-    void vel_cmd_body_frame_cb(const geometry_msgs::Twist &msg);
+    void vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg);
+    void vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg);
     void gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg);
     void gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg);
 
@@ -105,12 +145,14 @@ private:
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
 
-    // const std::vector<ImageResponse> img_response_;
-    /// control commands received from last callback
+    /// vehiclecontrol commands (received from last callback)
     // todo make a struct for control cmd, perhaps line with airlib's API 
     bool has_vel_cmd_;
-    geometry_msgs::Twist vel_cmd_;
-    string vel_cmd_yaw_mode_; 
+    VelCmd vel_cmd_;
+
+    // gimbal control
+    bool has_gimbal_cmd_;
+    GimbalCmd gimbal_cmd_; 
 
     /// ROS tf
     tf2_ros::TransformBroadcaster tf_broadcaster_;

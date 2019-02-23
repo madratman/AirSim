@@ -41,6 +41,7 @@ add_message_files(
   FILES
   GimbalAngleEulerCmd.msg
   GimbalAngleQuatCmd.msg
+  VelCmd.msg
 )
 
 add_service_files(

@@ -14,6 +14,10 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
 {
     initialize_airsim();
     initialize_ros();
+
+    // intitialize placeholder control commands
+    vel_cmd_ = VelCmd();
+    gimbal_cmd_ = GimbalCmd();
 }
 
 void AirsimROSWrapper::initialize_airsim()
@@ -107,39 +111,49 @@ msr::airlib::Quaternionr AirsimROSWrapper::get_airlib_quat(const tf2::Quaternion
     return msr::airlib::Quaternionr(tf2_quat.w(), tf2_quat.x(), tf2_quat.y(), tf2_quat.z()); 
 }
 
-void AirsimROSWrapper::vel_cmd_body_frame_cb(const geometry_msgs::Twist &msg)
+void AirsimROSWrapper::vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
 {
     double roll, pitch, yaw;
     auto drone_state = airsim_client_.getMultirotorState(); // todo use the state from drone state timer callback
     tf2::Matrix3x3(get_tf2_quat(drone_state.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
 
-    double vx_body = (msg.linear.x * cos(yaw)) - (msg.linear.y * sin(yaw));
-    double vy_body = (msg.linear.x * sin(yaw)) + (msg.linear.y * cos(yaw));
+    double vx_body = (msg.twist.linear.x * cos(yaw)) - (msg.twist.linear.y * sin(yaw));
+    double vy_body = (msg.twist.linear.x * sin(yaw)) + (msg.twist.linear.y * cos(yaw));
 
-    // todo save vel commands in class member in this callback. but actually send them in the drone state update timer callback    
-    airsim_client_.moveByVelocityAsync(vx_body, vy_body, msg.linear.z, vel_cmd_duration_, 
-        msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
+    vel_cmd_ = VelCmd(vx_body, vy_body, msg.twist.linear.z,
+                        msr::airlib::DrivetrainType::MaxDegreeOfFreedom,
+                        msr::airlib::YawMode(true, msg.twist.angular.z),
+                        msg.vehicle_name);
+    has_vel_cmd_ = true;
 }
 
-void AirsimROSWrapper::vel_cmd_world_frame_cb(const geometry_msgs::Twist &msg)
+void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
 {
-    airsim_client_.moveByVelocityAsync(msg.linear.x, msg.linear.y, msg.linear.z, vel_cmd_duration_, 
-        msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
+    vel_cmd_ = VelCmd(msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z,
+                        msr::airlib::DrivetrainType::MaxDegreeOfFreedom,
+                        msr::airlib::YawMode(true, msg.twist.angular.z),
+                        msg.vehicle_name);
+    has_vel_cmd_ = true;
 }
 
 void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg)
 {
     // airsim uses wxyz
-    msr::airlib::Quaternionr orientation = get_airlib_quat(gimbal_angle_quat_cmd_msg.orientation);
-    airsim_client_.simSetCameraOrientation(gimbal_angle_quat_cmd_msg.camera_name, orientation, gimbal_angle_quat_cmd_msg.vehicle_name);
+    // todo error check
+    gimbal_cmd_.target_quat = get_airlib_quat(gimbal_angle_quat_cmd_msg.orientation);
+    gimbal_cmd_.camera_name = gimbal_angle_quat_cmd_msg.camera_name;
+    gimbal_cmd_.vehicle_name = gimbal_angle_quat_cmd_msg.vehicle_name;
+    has_gimbal_cmd_ = true; 
 }
 
 void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg)
 {
     // airsim uses wxyz
     tf2::Quaternion tf2_quat(gimbal_angle_euler_cmd_msg.yaw, gimbal_angle_euler_cmd_msg.pitch, gimbal_angle_euler_cmd_msg.roll);
-    msr::airlib::Quaternionr orientation = get_airlib_quat(tf2_quat);
-    airsim_client_.simSetCameraOrientation(gimbal_angle_euler_cmd_msg.camera_name, orientation, gimbal_angle_euler_cmd_msg.vehicle_name);
+    gimbal_cmd_.target_quat = get_airlib_quat(tf2_quat);
+    gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
+    gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
+    has_gimbal_cmd_ = true; 
 }
 
 // todo to pass param and fill, or return value. 
@@ -207,11 +221,19 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
     global_gps_pub_.publish(gps_msg);
     vehicle_state_pub_.publish(vehicle_state_msg);
 
-    // TODO send control commands received from ros subscriber
-    // airsim_client_.simSetCameraOrientation(gimbal_angle_cmd_msg.camera_name, orientation, gimbal_angle_cmd_msg.vehicle_name);
-    // airsim_client_.moveByVelocityAsync(msg.linear.x, msg.linear.y, msg.linear.z, vel_cmd_duration_, 
-    //  msr::airlib::DrivetrainType::MaxDegreeOfFreedom, msr::airlib::YawMode(true, msg.angular.z));
 
+    // send control commands from the last callback to airsim
+    // airsim_client_.simSetCameraOrientation(gimbal_angle_cmd_msg.camera_name, orientation, gimbal_angle_cmd_msg.vehicle_name);
+    if (has_vel_cmd_)
+        airsim_client_.moveByVelocityAsync(vel_cmd_.x, vel_cmd_.y, vel_cmd_.z, vel_cmd_duration_, 
+            msr::airlib::DrivetrainType::MaxDegreeOfFreedom, vel_cmd_.yaw_mode);
+
+    if (has_gimbal_cmd_)
+        airsim_client_.simSetCameraOrientation(gimbal_cmd_.camera_name, gimbal_cmd_.target_quat, gimbal_cmd_.vehicle_name);
+
+    // "clear" control cmds
+    has_vel_cmd_ = false;
+    has_gimbal_cmd_ = false;
 }
 
 void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
