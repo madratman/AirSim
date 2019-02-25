@@ -47,8 +47,10 @@ void AirsimROSWrapper::initialize_ros()
     // nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
     // nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
 
-    front_left_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml";
-    front_right_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml";
+    // front_left_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml";
+    // front_right_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml";
+    front_left_calib_file_ = "/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left.yaml";
+    front_right_calib_file_ = "/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right.yaml";
 
     // fill camera info msg from YAML calib file. todo error check path
     read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, front_left_cam_info_msg_);
@@ -171,7 +173,7 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
 nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state)
 {
     nav_msgs::Odometry odom_ned_msg;
-    // odom_ned_msg.header.stamp = ;
+    // odom_ned_msg.header.frame = ;
     odom_ned_msg.child_frame_id = "/airsim/odom_local_ned"; // todo make param
 
     odom_ned_msg.pose.pose.position.x = drone_state.getPosition().x();
@@ -190,6 +192,21 @@ nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_airsim_state(const msr::a
     odom_ned_msg.twist.twist.angular.z = drone_state.kinematics_estimated.twist.angular.z();
 
     return odom_ned_msg;
+}
+
+void AirsimROSWrapper::publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg)
+{
+    geometry_msgs::TransformStamped odom_tf;
+    odom_tf.header = odom_ned_msg.header;
+    odom_tf.child_frame_id = "drone";
+    odom_tf.transform.translation.x = odom_ned_msg.pose.pose.position.x;
+    odom_tf.transform.translation.y = odom_ned_msg.pose.pose.position.y;
+    odom_tf.transform.translation.z = odom_ned_msg.pose.pose.position.z;
+    odom_tf.transform.rotation.x = odom_ned_msg.pose.pose.orientation.x;
+    odom_tf.transform.rotation.y = odom_ned_msg.pose.pose.orientation.y;
+    odom_tf.transform.rotation.z = odom_ned_msg.pose.pose.orientation.z;
+    odom_tf.transform.rotation.w = odom_ned_msg.pose.pose.orientation.w;
+    tf_broadcaster_.sendTransform(odom_tf);
 }
 
 sensor_msgs::NavSatFix AirsimROSWrapper::get_gps_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state)
@@ -220,6 +237,7 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 
     // convert airsim drone state to ROS msgs
     nav_msgs::Odometry odom_ned_msg = get_odom_msg_from_airsim_state(drone_state);
+    odom_ned_msg.header.frame_id = "world";
     odom_ned_msg.header.stamp = curr_ros_time;
 
     sensor_msgs::NavSatFix gps_msg = get_gps_msg_from_airsim_state(drone_state);
@@ -229,6 +247,7 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 
     // publish to ROS!  
     odom_local_ned_pub_.publish(odom_ned_msg);
+    publish_odom_tf(odom_ned_msg);
     global_gps_pub_.publish(gps_msg);
     vehicle_state_pub_.publish(vehicle_state_msg);
 

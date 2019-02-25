@@ -120,6 +120,7 @@ public:
 
     /// ROS tf broadcasters
     void publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id);
+    void publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg);
 
     /// camera helper methods
     // TODO migrate to image_tranport camera publisher https://answers.ros.org/question/278602/how-to-use-camera_info_manager-to-publish-camera_info/
