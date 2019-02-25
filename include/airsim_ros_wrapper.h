@@ -164,17 +164,17 @@ private:
     ros::Timer airsim_control_update_timer_;
 
     /// ROS camera messages
-    sensor_msgs::CameraInfo airsim_cam_info_front_left_;
-    sensor_msgs::CameraInfo airsim_cam_info_front_right_;
-    sensor_msgs::CameraInfo airsim_cam_info_front_mono_;
+    sensor_msgs::CameraInfo front_left_cam_info_msg_;
+    sensor_msgs::CameraInfo front_right_cam_info_msg_;
+    // sensor_msgs::CameraInfo front_center_mono_cam_info_msg_;
 
     /// ROS camera publishers
     image_transport::ImageTransport it_;
     image_transport::Publisher front_left_img_raw_pub_;
     image_transport::Publisher front_right_img_raw_pub_;
     image_transport::Publisher front_left_depth_planar_pub_;
-
-    ros::Publisher cam_0_pose_pub_; 
+    ros::Publisher front_left_cam_info_pub_;
+    ros::Publisher front_right_cam_info_pub_;
 
     /// ROS other publishers
     ros::Publisher clock_pub_;
@@ -187,7 +187,6 @@ private:
     /// ROS Subscribers
     // ros::CallbackQueue img_callback_queue_
     // ros::SubscribeOptions sub_ops_;
-
     ros::Subscriber vel_cmd_body_frame_sub_;
     ros::Subscriber vel_cmd_world_frame_sub_;
     ros::Subscriber gimbal_angle_quat_cmd_sub_;

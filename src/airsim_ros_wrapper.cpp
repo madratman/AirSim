@@ -40,19 +40,22 @@ void AirsimROSWrapper::initialize_ros()
 {
     // ros params
     vel_cmd_duration_ = 0.05;
-    front_left_img_raw_pub_ = it_.advertise("front_left/image_raw", 1);
-    front_right_img_raw_pub_ = it_.advertise("front_right/image_raw", 1);
-    front_left_depth_planar_pub_ = it_.advertise("front_left/depth_planar", 1);
+    front_left_img_raw_pub_ = it_.advertise("front/left/image_raw", 1);
+    front_right_img_raw_pub_ = it_.advertise("front/right/image_raw", 1);
+    front_left_depth_planar_pub_ = it_.advertise("front/left/depth_planar", 1);
 
-    nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
-    nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
+    // nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
+    // nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
+
+    front_left_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml";
+    front_right_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml";
 
     // fill camera info msg from YAML calib file. todo error check path
-    // read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, airsim_cam_info_front_left_);
-    // airsim_cam_info_front_left_.header.frame_id = "airsim/cam_front_left";
+    read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, front_left_cam_info_msg_);
+    front_left_cam_info_msg_.header.frame_id = "airsim/front/left";
 
-    // read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, airsim_cam_info_front_right_);
-    // airsim_cam_info_front_right_.header.frame_id = "airsim/cam_front_right";
+    read_params_from_yaml_and_fill_cam_info_msg(front_right_calib_file_, front_right_cam_info_msg_);
+    front_right_cam_info_msg_.header.frame_id = "airsim/front/right";
 
     takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_cb, this);
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_cb, this);
@@ -62,7 +65,9 @@ void AirsimROSWrapper::initialize_ros()
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
     global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
-    cam_0_pose_pub_ = nh_private_.advertise<geometry_msgs::PoseStamped> ("/cam_0/pose", 10);
+
+    front_left_cam_info_pub_ = nh_private_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
+    front_right_cam_info_pub_ = nh_private_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
 
     vel_cmd_body_frame_sub_ = nh_private_.subscribe("vel_cmd_body_frame", 50, &AirsimROSWrapper::vel_cmd_body_frame_cb, this); // todo ros::TransportHints().tcpNoDelay();
     vel_cmd_world_frame_sub_ = nh_private_.subscribe("vel_cmd_world_frame", 50, &AirsimROSWrapper::vel_cmd_world_frame_cb, this);
@@ -326,8 +331,8 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     bgr_front_left_msg->header.stamp = curr_ros_time;
     bgr_front_right_msg->header.stamp = curr_ros_time;
     front_left_depth_planar_msg->header.stamp = curr_ros_time;
-    airsim_cam_info_front_left_.header.stamp = curr_ros_time; // update timestamp of saved cam info msgs
-    airsim_cam_info_front_right_.header.stamp = curr_ros_time;
+    front_left_cam_info_msg_.header.stamp = curr_ros_time; // update timestamp of saved cam info msgs
+    front_right_cam_info_msg_.header.stamp = curr_ros_time;
 
     // publish camera transforms
     std_msgs::Header tf_header;
@@ -340,6 +345,8 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     front_right_img_raw_pub_.publish(bgr_front_right_msg);
     front_left_img_raw_pub_.publish(bgr_front_left_msg);
     front_left_depth_planar_pub_.publish(front_left_depth_planar_msg);
+    front_left_cam_info_pub_.publish(front_left_cam_info_msg_);
+    front_right_cam_info_pub_.publish(front_right_cam_info_msg_);
 }
 
 void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id)
