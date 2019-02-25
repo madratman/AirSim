@@ -31,6 +31,7 @@ catkin_make # or catkin build
 cd airsim_ros_ws
 source devel/setup.bash
 rosrun airsim_ros_pkgs airsim_node
+rviz -d rviz/default.rviz
 ```
 ## Compute disparity using stereo_image_proc
 - `ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc`   
