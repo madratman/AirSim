@@ -10,7 +10,7 @@ constexpr char AirsimROSWrapper::P_YML_NAME[];
 constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
 
 AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHandle &nh_private)
-    : nh_(nh), nh_private_(nh_private), it_(nh_private_)
+    : nh_(nh), nh_private_(nh_private), it_(nh_)
 {
     initialize_airsim();
     initialize_ros();
@@ -66,8 +66,8 @@ void AirsimROSWrapper::initialize_ros()
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
     global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
 
-    front_left_cam_info_pub_ = nh_private_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
-    front_right_cam_info_pub_ = nh_private_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
+    front_left_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
+    front_right_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
 
     vel_cmd_body_frame_sub_ = nh_private_.subscribe("vel_cmd_body_frame", 50, &AirsimROSWrapper::vel_cmd_body_frame_cb, this); // todo ros::TransportHints().tcpNoDelay();
     vel_cmd_world_frame_sub_ = nh_private_.subscribe("vel_cmd_world_frame", 50, &AirsimROSWrapper::vel_cmd_world_frame_cb, this);
