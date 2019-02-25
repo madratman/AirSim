@@ -32,3 +32,8 @@ cd airsim_ros_ws
 source devel/setup.bash
 rosrun airsim_ros_pkgs airsim_node
 ```
+## Compute disparity using stereo_image_proc
+- `ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc`   
+`# not needed: ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc _approximate_sync:=True`
+
+- View disparity `rosrun image_view stereo_view stereo:=/front image:=image_rect_color`
