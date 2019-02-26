@@ -13,6 +13,8 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/GimbalAngleEulerCmd.h>
 #include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/SetGlobalPosition.h>
+#include <airsim_ros_pkgs/PathXYZVPsi.h>
+#include <airsim_ros_pkgs/WaypointXYZVPsi.h>
 #include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/VelCmd.h>
 #include <chrono>
@@ -36,6 +38,7 @@ STRICT_MODE_ON
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <path_tracking_control.h> // todo namespacing 
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
@@ -109,6 +112,12 @@ public:
     void vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg);
     void gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg);
     void gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg);
+    void path_cb(const airsim_ros_pkgs::PathXYZVPsi &path_msg);
+
+    /// path controller
+    void init_path_controller();
+    void update_path_tracker();
+    VelControlCmd get_safe_vel_cmd(const VelControlCmd &desired_vel_cmd);
 
     /// ROS service callbacks
     bool takeoff_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
@@ -149,6 +158,21 @@ private:
     // todo make a struct for control cmd, perhaps line with airlib's API 
     bool has_vel_cmd_;
     VelCmd vel_cmd_;
+
+    // todo path controller needs refactoring. take out of ros wrapper
+    PathXYZVPsi path_xyzvpsi_;
+    bool has_path_;
+    bool is_tracking_path_;
+    bool is_path_completed_;
+    double waypoint_float_idx_;
+    double path_tracking_dt_;
+
+    PathTrackingControlParameters controller_params_;
+    PathTrackingControl* controller_;// todo smart pointer
+    PathTrackingControl::PathTrackingControlState controller_state_;
+    nav_msgs::Odometry curr_odom_ned_;
+    VelControlCmd path_controller_speed_cmd_; 
+    VelControlCmd safe_speed_cmd_; 
 
     // gimbal control
     bool has_gimbal_cmd_;

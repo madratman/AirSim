@@ -75,11 +75,9 @@ struct VelControlCmd
 
 struct XYZVPsi
 {
-    double time;
     Eigen::Vector3d position;
     double vel;
     double heading;
-    int type;
 };
 
 typedef std::vector<XYZVPsi> PathXYZVPsi;

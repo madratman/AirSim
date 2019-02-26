@@ -252,6 +252,7 @@ XYZVPsi PathTrackingControl::sample_path(const PathXYZVPsi &path, const double &
     return point;
 }
 
+// updates closest_idx_float! ugly API
 XYZVPsi PathTrackingControl::project_odom_on_path(const OdometryEuler &odom, const PathXYZVPsi &path, double &closest_idx_float)
 {
     XYZVPsi new_state;
