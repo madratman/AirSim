@@ -81,10 +81,7 @@ struct XYZVPsi
     int type;
 };
 
-struct PathXYZVPsi
-{
-    std::vector<XYZVPsi> path;
-};
+typedef std::vector<XYZVPsi> PathXYZVPsi;
 
 class PathTrackingControlParameters
 {
@@ -117,10 +114,10 @@ public:
         cross_track_IMax(5.0),
         tracking_threshold(10.),
         deccel_max(3.0),
-        reaction_time(0.5),
-        land_capture_radius(1.0) {}
+        reaction_time(0.5) 
+        {}
 
-    bool LoadParameters(ros::NodeHandle &n);
+    bool load_params(const ros::NodeHandle &nh);
 };
 
 
@@ -161,23 +158,28 @@ public:
         const nav_msgs::Odometry &curr_pose, 
         const PathXYZVPsi &path, 
         PathTrackingControlState &control_state, 
-        nav_msgs::Odometry &look_ahead_pose, 
-        bool &valid_cmd);
+        nav_msgs::Odometry &look_ahead_pose, // next lookahead pose from the path
+        bool &is_cmd_valid);// should state machine actually process controller's output
 
 private:
     PathTrackingControlParameters params_;
+    PathTrackingControlParameters control_state_;
+
+    // todo take out interpolate etc out of controller class!  
+    XYZVPsi interpolate(const XYZVPsi &start_waypoint, const XYZVPsi& end_waypoint, const double &interp_ratio);
+    XYZVPsi sample_path(const PathXYZVPsi &path, const double &index);
+    XYZVPsi project_odom_on_path(const OdometryEuler &odom, const PathXYZVPsi &path, double &closest_idx_float);
+
+    double get_stopping_distance(const double &acceleration,const double &reactionTime,const double &speed);
+    double get_stopping_speed(const double &acceleration, const double &reactionTime, const double &distance);
+    std::pair<double, bool> get_dist_to_end_and_is_sharp_corner(const PathXYZVPsi &path, const double &idx_float, const double &max_lookahead_dist);
+    std::pair<Eigen::Vector3d, double> vector_to_line_segment(const Eigen::Vector3d &curr_waypt, const Eigen::Vector3d &next_waypt, const Eigen::Vector3d &odom);
+    std::pair<XYZVPsi, Eigen::Vector3d> get_pursuit_state_pair(const PathXYZVPsi &path, double idx_float, double look_head_dist, double max_angle_rad, bool &at_end);
+
     bool is_finite(const Eigen::Vector3d &v);
     bool is_finite(const OdometryEuler &o);
     bool is_finite(const PathXYZVPsi &p);
     bool is_finite(const VelControlCmd &p);
-
-    XYZVPsi interpolate(const XYZVPsi &start_point, const XYZVPsi& end_point, double alpha);
-    XYZVPsi sample_path(const PathXYZVPsi &path, double index);
-    XYZVPsi project_on_path(const OdometryEuler &state, const PathXYZVPsi &path, double &closest_idx);
-    std::pair<XYZVPsi, Eigen::Vector3d> look_ahead_max_angle(const PathXYZVPsi &path, double idx, double dist, double max_angle_rad, bool &at_end);
-    double get_stopping_distance(const double &acceleration,const double &reactionTime,const double &speed);
-    double get_stopping_speed(const double &acceleration, const double &reactionTime, const double &distance);
-    double get_dist_to_end_of_path(const PathXYZVPsi &path, double idx, double maxLookAhead, double maxAngleRad, bool &sharpCorner);
 };
 
 #endif /* _PATH_TRACKING_CONTROL_H_ */
