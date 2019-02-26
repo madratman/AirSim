@@ -156,7 +156,7 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
     //Separate x,y from z control
     if(curr_to_closest_vec.norm() > params_.tracking_threshold)
     {
-        ROS_WARN_STREAM_THROTTLE(5.0, "[PathTrackControl] Greater than" << params_.tracking_threshold << "meters from path, no command issued");
+        ROS_WARN_STREAM_THROTTLE(5.0, "[PathTrackControl] Greater than " << params_.tracking_threshold << " meters from path, no command issued");
         look_ahead_pose = curr_odom;
         valid_cmd = true;
         return std::make_pair(command, valid_cmd);
@@ -165,7 +165,7 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
     curr_to_closest_vec[2] = 0;
     if(desired_velocity.norm() > params_.max_speed)
     {
-        ROS_WARN_STREAM_THROTTLE(5.0, "[PathTrackControl] Commanded path exceeds maximum allowed speed"<<desired_velocity.norm()<<" > "<<params_.max_speed);
+        ROS_WARN_STREAM_THROTTLE(5.0, "[PathTrackControl] Commanded path exceeds maximum allowed speed " << desired_velocity.norm()<<" > "<<params_.max_speed);
         desired_velocity.normalize();
         desired_velocity *= params_.max_speed;
     }

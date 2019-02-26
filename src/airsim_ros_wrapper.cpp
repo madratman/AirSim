@@ -40,17 +40,21 @@ void AirsimROSWrapper::initialize_ros()
 {
     // ros params
     vel_cmd_duration_ = 0.05;
+    double update_airsim_img_response_every_n_sec;// = 0.0001;
+    double update_airsim_control_every_n_sec;// = 0.01;
+
     front_left_img_raw_pub_ = it_.advertise("front/left/image_raw", 1);
     front_right_img_raw_pub_ = it_.advertise("front/right/image_raw", 1);
     front_left_depth_planar_pub_ = it_.advertise("front/left/depth_planar", 1);
 
-    // nh_private_.getParam("front_left_calib_file_", front_left_calib_file_);
-    // nh_private_.getParam("front_right_calib_file_", front_right_calib_file_);
+    nh_.getParam("max_vert_vel_", max_vert_vel_);
+    nh_.getParam("max_horz_vel", max_horz_vel_);
 
-    // front_left_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml";
-    // front_right_calib_file_ = "/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml";
-    front_left_calib_file_ = "/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left.yaml";
-    front_right_calib_file_ = "/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right.yaml";
+    nh_private_.getParam("front_left_calib_file", front_left_calib_file_);
+    nh_private_.getParam("front_right_calib_file", front_right_calib_file_);
+
+    nh_private_.getParam("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec);
+    nh_private_.getParam("update_airsim_control_every_n_sec", update_airsim_control_every_n_sec);
 
     // fill camera info msg from YAML calib file. todo error check path
     read_params_from_yaml_and_fill_cam_info_msg(front_left_calib_file_, front_left_cam_info_msg_);
@@ -71,14 +75,12 @@ void AirsimROSWrapper::initialize_ros()
     front_left_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
     front_right_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
 
+    path_sub_ = nh_private_.subscribe("path", 50, &AirsimROSWrapper::path_cb, this);
     vel_cmd_body_frame_sub_ = nh_private_.subscribe("vel_cmd_body_frame", 50, &AirsimROSWrapper::vel_cmd_body_frame_cb, this); // todo ros::TransportHints().tcpNoDelay();
     vel_cmd_world_frame_sub_ = nh_private_.subscribe("vel_cmd_world_frame", 50, &AirsimROSWrapper::vel_cmd_world_frame_cb, this);
     gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
     gimbal_angle_euler_cmd_sub_ = nh_private_.subscribe("gimbal_angle_euler_cmd", 50, &AirsimROSWrapper::gimbal_angle_euler_cmd_cb, this);
 
-    double update_airsim_img_response_every_n_sec = 0.0001;
-    double update_airsim_control_every_n_sec = 0.01;
-    // nh_private_.param("update_airsim_img_response_every_n_sec", update_airsim_img_response_every_n_sec, update_airsim_img_response_every_n_sec);
     airsim_img_response_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_img_response_every_n_sec), &AirsimROSWrapper::img_response_timer_cb, this);
     airsim_control_update_timer_ = nh_private_.createTimer(ros::Duration(update_airsim_control_every_n_sec), &AirsimROSWrapper::drone_state_timer_cb, this);
 }
@@ -284,7 +286,7 @@ mavros_msgs::State AirsimROSWrapper::get_vehicle_state_msg(msr::airlib::Multirot
 // path_controller_speed_cmd_
 VelControlCmd AirsimROSWrapper::get_safe_vel_cmd(const VelControlCmd &desired_vel_cmd)
 {
-
+    return desired_vel_cmd;
 }
 
 void AirsimROSWrapper::update_path_tracker()

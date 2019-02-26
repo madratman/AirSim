@@ -102,6 +102,7 @@ public:
 
     void initialize_airsim();
     void initialize_ros();
+    void setup_vehicle_constraints(); // todo make ros params
 
     /// ROS timer callbacks
     void img_response_timer_cb(const ros::TimerEvent& event); // update images from airsim_client_ every nth sec
@@ -153,6 +154,9 @@ private:
 
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
+
+    double max_horz_vel_;
+    double max_vert_vel_;
 
     /// vehiclecontrol commands (received from last callback)
     // todo make a struct for control cmd, perhaps line with airlib's API 
@@ -216,6 +220,7 @@ private:
     ros::Subscriber vel_cmd_world_frame_sub_;
     ros::Subscriber gimbal_angle_quat_cmd_sub_;
     ros::Subscriber gimbal_angle_euler_cmd_sub_;
+    ros::Subscriber path_sub_;
 
     /// ROS Services
     ros::ServiceServer takeoff_srvr_;
