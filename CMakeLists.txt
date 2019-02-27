@@ -84,6 +84,7 @@ link_directories(${AIRSIM_ROOT}/Unity/linux-build)
 
 add_library(lib_airsim_ros_wrapper src/airsim_ros_wrapper.cpp)
 add_library(lib_path_tracking_control src/path_tracking_control.cpp)
+add_library(lib_pid_position_controller_simple src/pid_position_controller_simple.cpp)
 
 # add_dependencies(lib_airsim_ros_wrapper ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lib_path_tracking_control ${catkin_LIBRARIES})
