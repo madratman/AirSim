@@ -92,7 +92,7 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
     // if empty path, do nothing 
     if(path.size() < 1)
     {
-        ROS_INFO_STREAM_THROTTLE(5.0, "[PathTrackControl] Path does not contain any waypoints, no command issued");
+        ROS_INFO_STREAM_THROTTLE(1.0, "[PathTrackControl] Path does not contain any waypoints, no command issued");
         look_ahead_pose = curr_odom;
         valid_cmd = true;
         return std::make_pair(command, valid_cmd);
@@ -285,7 +285,7 @@ XYZVPsi PathTrackingControl::project_odom_on_path(const OdometryEuler &odom, con
             XYZVPsi curr_waypt =  path[curr_idx];
             XYZVPsi next_waypt =  path[curr_idx + 1];
             std::pair<Eigen::Vector3d, double> vec_rv_pair = vector_to_line_segment(curr_waypt.position, next_waypt.position, odom.position);
-            Eigen::Vector3d vec =  vec_rv_pair.first;
+            Eigen::Vector3d vec = vec_rv_pair.first;
             double rv = vec_rv_pair.second;
             double len = vec.norm();
 
@@ -310,7 +310,7 @@ XYZVPsi PathTrackingControl::project_odom_on_path(const OdometryEuler &odom, con
         }
     }
 
-    //ROS_INFO_STREAM("[PathTrackControl] min_idx_float=" << min_idx_float << " / closest_idx_float=" << closest_idx_float << " / total size=" << ts);
+    ROS_INFO_STREAM("[PathTrackControl] min_idx_float=" << min_idx_float << " / closest_idx_float=" << closest_idx_float << " / total size=" << ts);
     closest_idx_float = min_idx_float;
     return new_state;
 }
@@ -405,7 +405,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
         return std::make_pair(path.back(), pursuit_vec);
     }
 
-    //ROS_INFO_STREAM_THROTTLE(1.0, ">>> look_ahead_dist=" << look_ahead_dist);
+    ROS_INFO_STREAM_THROTTLE(1.0, ">>> look_ahead_dist=" << look_ahead_dist);
 
     //If next_idx is too close to current idx_float, then increase index value
     XYZVPsi next_waypt = path[next_idx];
@@ -418,7 +418,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
         delta = next_waypt.position - curr_waypt.position;
     }
 
-    //ROS_INFO_STREAM_THROTTLE(1.0, ">>> idx_float=" << idx_float << " / next_idx=" << next_idx << " / delta=" << delta.norm() << " / total size=" << path_size);
+    ROS_INFO_STREAM_THROTTLE(1.0, ">>> idx_float=" << idx_float << " / next_idx=" << next_idx << " / delta=" << delta.norm() << " / total size=" << path_size);
   
     XYZVPsi pursuit_state = curr_waypt;
     Eigen::Vector3d pursuit_vec = Eigen::Vector3d::Zero();
@@ -445,7 +445,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
         {
             pursuit_state = path[std::max(0, next_idx-1)];
             pursuit_vec = path[std::max(0, next_idx-1)].position - path[std::max(0, next_idx-2)].position;
-            //ROS_INFO_STREAM_THROTTLE(1.0, ">>> angle: curr_psi_offset=" << curr_psi_offset << " / params_.look_ahead_angle=" << params_.look_ahead_angle);    
+            ROS_INFO_STREAM_THROTTLE(1.0, ">>> angle: curr_psi_offset=" << curr_psi_offset << " / params_.look_ahead_angle=" << params_.look_ahead_angle);    
             break;
         }
 
@@ -463,7 +463,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
                 bAtEnd = true;
                 pursuit_state = path.back();
                 pursuit_vec = path[std::max(0,(int)path.size()-1)].position - path[std::max(0,(int)path.size()-2)].position;
-                //ROS_INFO_STREAM_THROTTLE(1.0, ">>> at the end");    
+                // ROS_INFO_STREAM_THROTTLE(1.0, ">>> at the end");    
             } 
             else 
             {
@@ -473,7 +473,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
                 next_waypt = path[next_idx];
             }
         }
-        //ROS_INFO_STREAM_THROTTLE(1.0, ">>> dist_remanining=" << dist_remaining);
+        ROS_INFO_STREAM_THROTTLE(1.0, ">>> dist_remanining=" << dist_remaining);
     }
 
     at_end = bAtEnd;
