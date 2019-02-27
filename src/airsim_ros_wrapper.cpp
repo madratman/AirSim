@@ -89,8 +89,8 @@ void AirsimROSWrapper::initialize_ros()
 
 void AirsimROSWrapper::init_path_controller()
 {
-    //Set default period as 50Hz
-    path_tracking_dt_ = 1.0/50.0;
+    // todo rosparam. same as 
+    path_tracking_dt_ = 1.0 / 50.0;
 
     // todo path tracking should be a differnt node itself
     if(!controller_params_.load_params(nh_private_))
@@ -200,7 +200,7 @@ bool AirsimROSWrapper::path_srv_cb(airsim_ros_pkgs::PathXYZVPsiSrv::Request& req
         path_xyzvpsi_.push_back(xyzvpsi);        
     }
 
-    std::cout<<"path_srv_cb\n";
+    std::cout << "path_srv_cb\n";
     controller_state_.Reset();
     has_path_ = true;
     is_path_completed_ = false;
@@ -325,20 +325,18 @@ void AirsimROSWrapper::update_path_tracker()
     }
 
     unsigned int curr_idx = (int)std::ceil(controller_state_.closest_idx);  
-    int pathSize = path_xyzvpsi_.size();
     ROS_INFO_STREAM_THROTTLE(2.0, "[AirsimROSWrapper] Path Index: " << curr_idx << " of total: " << path_xyzvpsi_.size());
 
     //Check if reached end of trajectory command
-    curr_idx = (unsigned int)std::round(controller_state_.closest_idx);
-    if ((curr_idx+1) >= path_xyzvpsi_.size())
-    {
-        is_path_completed_ = true;
-        // todo set has_path_ to false?
-        ROS_INFO_STREAM_THROTTLE(1.0, "[AirsimROSWrapper] Path completed");
-        // set_zero_vel_cmd();//hack
-        // has_vel_cmd_ = true;
-        // return;
-    }
+    // if ((curr_idx+1) >= path_xyzvpsi_.size())
+    // {
+    //     is_path_completed_ = true;
+    //     // todo set has_path_ to false?
+    //     ROS_INFO_STREAM_THROTTLE(1.0, "[AirsimROSWrapper] Path completed");
+    //     // set_zero_vel_cmd();//hack
+    //     // has_vel_cmd_ = true;
+    //     // return;
+    // }
 
     safe_speed_cmd_ = get_safe_vel_cmd(path_controller_speed_cmd_); // todo extract this into a safety module?
 
@@ -396,12 +394,12 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
         airsim_client_.simSetCameraOrientation(gimbal_cmd_.camera_name, gimbal_cmd_.target_quat, gimbal_cmd_.vehicle_name);
 
     // todo
-    if (in_air_ && !has_vel_cmd_)
-    {
-        set_zero_vel_cmd();
-        airsim_client_.moveByVelocityAsync(vel_cmd_.x, vel_cmd_.y, vel_cmd_.z, vel_cmd_duration_, 
-            msr::airlib::DrivetrainType::MaxDegreeOfFreedom, vel_cmd_.yaw_mode);
-    }
+    // if (in_air_ && !has_vel_cmd_)
+    // {
+    //     set_zero_vel_cmd();
+    //     airsim_client_.moveByVelocityAsync(vel_cmd_.x, vel_cmd_.y, vel_cmd_.z, vel_cmd_duration_, 
+    //         msr::airlib::DrivetrainType::MaxDegreeOfFreedom, vel_cmd_.yaw_mode);
+    // }
 
     // "clear" control cmds
     has_vel_cmd_ = false;

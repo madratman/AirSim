@@ -310,7 +310,7 @@ XYZVPsi PathTrackingControl::project_odom_on_path(const OdometryEuler &odom, con
         }
     }
 
-    ROS_INFO_STREAM("[PathTrackControl] min_idx_float=" << min_idx_float << " / closest_idx_float=" << closest_idx_float << " / total size=" << ts);
+    ROS_INFO_STREAM("[PathTrackControl] min_idx_float=" << min_idx_float << " / closest_idx_float=" << closest_idx_float << " / total size=" << path.size());
     closest_idx_float = min_idx_float;
     return new_state;
 }
