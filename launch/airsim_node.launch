@@ -9,10 +9,6 @@
     <param name="update_airsim_img_response_every_n_sec" type="double" value="0.01" /> 
     <param name="update_airsim_control_every_n_sec" type="double" value="0.01" />
 
-    <!-- Vehicle limits -->
-    <param name="max_vert_vel" type="double" value="5.0" />
-    <param name="max_horz_vel" type="double" value="10.0" />
-
     <!-- Camera calibration -->
     <!-- todo add relative path -->
     <!-- ubuntu -->
@@ -22,22 +18,6 @@
     <!-- <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml" /> -->
     <!-- <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml" /> -->
 
-    <!-- path tracking control parameters -->
-    <param name="cross_track_P" type="double" value="0.50" />
-    <param name="cross_track_I" type="double" value="0.10" />
-    <param name="cross_track_D" type="double" value="0.001" />
-    <param name="cross_track_IMax" type="double" value="1.5" />
-
-    <param name="cross_track_PZ" type="double" value="0.5" />
-    <param name="cross_track_DZ" type="double" value="0.01" />
-
-    <param name="loop_rate" type="double" value="50.0" />  
-    <param name="max_speed" type="double" value="10.0" />
-    <param name="look_ahead_time" type="double" value="1.0" />
-    <param name="look_ahead_angle" type="double" value="0.7" />
-    <param name="tracking_threshold" type="double" value="10.0" />
-    <param name="max_deceleration" type="double" value="5.0" />
-    <param name="reaction_time" type="double" value="1.15" />
 </node>
 
 </launch>

@@ -65,13 +65,13 @@ public:
     bool load_from_rosparams(const ros::NodeHandle& nh);
 };
 
-class PIDPositionControllerNode
+class PIDPositionController
 {
 public:
-    PIDPositionControllerNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
+    PIDPositionController(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
 
     // ROS service callbacks
-    bool local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response);
+    bool local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response); 
     // todo airsim_node should publish geo coordinates for conversion outside
     // bool gps_goal_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response);
 
@@ -108,6 +108,7 @@ private:
 
     ros::Publisher airsim_vel_cmd_world_frame_pub_;
     ros::Subscriber airsim_odom_sub_;
+    ros::ServiceServer local_position_goal_srvr_;
 
     ros::Timer update_control_cmd_timer_;
 };

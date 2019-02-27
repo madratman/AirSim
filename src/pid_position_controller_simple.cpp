@@ -30,7 +30,7 @@ bool DynamicConstraints::load_from_rosparams(const ros::NodeHandle &nh)
 }
 
 
-PIDPositionControllerNode::PIDPositionControllerNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
+PIDPositionController::PIDPositionController(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     : nh_(nh), nh_private_(nh_private), 
     has_odom_(false), has_goal_(false), reached_goal_(false)
 {
@@ -40,7 +40,7 @@ PIDPositionControllerNode::PIDPositionControllerNode(const ros::NodeHandle &nh, 
     reset_errors();
 }
 
-void PIDPositionControllerNode::reset_errors()
+void PIDPositionController::reset_errors()
 {
     prev_error_.x = 0.0;
     prev_error_.y = 0.0;
@@ -48,7 +48,7 @@ void PIDPositionControllerNode::reset_errors()
     prev_error_.yaw = 0.0;
 }
 
-void PIDPositionControllerNode::initialize_ros()
+void PIDPositionController::initialize_ros()
 {
     vel_cmd_ = airsim_ros_pkgs::VelCmd();
     // ROS params
@@ -59,13 +59,15 @@ void PIDPositionControllerNode::initialize_ros()
     airsim_vel_cmd_world_frame_pub_ = nh_private_.advertise<airsim_ros_pkgs::VelCmd>("/vel_cmd_body_frame", 1);
  
     // ROS subscribers
-    airsim_odom_sub_ = nh_.subscribe("/airsim_node/odom_local_ned", 50, &PIDPositionControllerNode::airsim_odom_cb, this);
+    airsim_odom_sub_ = nh_.subscribe("/airsim_node/odom_local_ned", 50, &PIDPositionController::airsim_odom_cb, this);
+    // todo publish this under global nodehandle / "airsim node" and hide it from user
+    local_position_goal_srvr_ = nh_.advertiseService("/airsim_node/local_position_goal", &PIDPositionController::local_position_goal_srv_cb, this);
 
     // ROS timers
-    update_control_cmd_timer_ = nh_private_.createTimer(ros::Duration(update_control_every_n_sec), &PIDPositionControllerNode::update_control_cmd_timer_cb, this);
+    update_control_cmd_timer_ = nh_private_.createTimer(ros::Duration(update_control_every_n_sec), &PIDPositionController::update_control_cmd_timer_cb, this);
 }
 
-void PIDPositionControllerNode::airsim_odom_cb(const nav_msgs::Odometry odom_msg)
+void PIDPositionController::airsim_odom_cb(const nav_msgs::Odometry odom_msg)
 {
     has_odom_ = true;
     curr_odom_ = odom_msg;
@@ -77,7 +79,7 @@ void PIDPositionControllerNode::airsim_odom_cb(const nav_msgs::Odometry odom_msg
 
 // todo maintain internal representation as eigen vec?
 // todo check if low velocity if within thresh?
-void PIDPositionControllerNode::check_reached_goal()
+void PIDPositionController::check_reached_goal()
 {
     double euler_xyz = sqrt((target_position_.x - curr_position_.x) * (target_position_.x - curr_position_.x) 
                         + (target_position_.y - curr_position_.y) * (target_position_.y - curr_position_.y)
@@ -87,46 +89,56 @@ void PIDPositionControllerNode::check_reached_goal()
         reached_goal_ = true; 
 }
 
-bool PIDPositionControllerNode::local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response)
+bool PIDPositionController::local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response)
 {
-    if ( has_goal_ && !reached_goal_)
+    if (has_goal_ && !reached_goal_)
     {
         // todo maintain array of position goals
-        ROS_ERROR_STREAM("denying position goal request. I am still following the previous goal");
+        ROS_ERROR_STREAM("[PIDPositionController] denying position goal request. I am still following the previous goal");
         return false;
     }
 
-    if (!has_goal_ || (has_goal_ && reached_goal_))
+    if (!has_goal_)
     {
         target_position_.x = request.x;
         target_position_.y = request.y;
         target_position_.z = request.z;
         target_position_.yaw = request.yaw;
-    }       
+        ROS_INFO_STREAM("[PIDPositionController] got goal: x=" << target_position_.x << " y=" << target_position_.y << " z=" << target_position_.z << " yaw=" << target_position_.yaw );
 
-    // todo error checks 
-    // todo fill response
-    has_goal_ = true;
-    reset_errors(); // todo
-    return true;
+        // todo error checks 
+        // todo fill response
+        has_goal_ = true;
+        reached_goal_ = false;
+        reset_errors(); // todo
+        return true;
+    }
 }
 
-void PIDPositionControllerNode::update_control_cmd_timer_cb(const ros::TimerEvent& event)
+void PIDPositionController::update_control_cmd_timer_cb(const ros::TimerEvent& event)
 {
-    check_reached_goal();
-    if (has_goal_ && (!reached_goal_) && (has_odom_))
+    if (!has_odom_)
     {
+        ROS_ERROR_STREAM("[PIDPositionController] Waiting for odometry!");
+        return;
+    }
+
+    if (has_goal_)
+    {
+        check_reached_goal();
+        if(reached_goal_)
+        {
+            ROS_INFO_STREAM("[PIDPositionController] Reached goal!");
+            has_goal_ = false;
+        }
+
         compute_control_cmd();
         enforce_dynamic_constraints();
         publish_control_cmd();
     }
-    else
-    {
-        // todo
-    }
 }
 
-void PIDPositionControllerNode::compute_control_cmd()
+void PIDPositionController::compute_control_cmd()
 {
     curr_error_.x = target_position_.x - curr_position_.x;
     curr_error_.y = target_position_.y - curr_position_.y;
@@ -151,7 +163,7 @@ void PIDPositionControllerNode::compute_control_cmd()
     // vel_cmd_.twist.angular.z = 0.0; // todo
 }
 
-void PIDPositionControllerNode::enforce_dynamic_constraints()
+void PIDPositionController::enforce_dynamic_constraints()
 {
     double vel_norm_horz = sqrt((vel_cmd_.twist.linear.x * vel_cmd_.twist.linear.x) 
                             + (vel_cmd_.twist.linear.y * vel_cmd_.twist.linear.y));
@@ -170,7 +182,7 @@ void PIDPositionControllerNode::enforce_dynamic_constraints()
     // todo yaw limits
 }
 
-void PIDPositionControllerNode::publish_control_cmd()
+void PIDPositionController::publish_control_cmd()
 {
     airsim_vel_cmd_world_frame_pub_.publish(vel_cmd_);
 }

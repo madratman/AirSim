@@ -119,9 +119,6 @@ public:
     bool land_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool reset_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-    bool set_local_position_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response); 
-    bool set_global_position_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response); 
-
     /// ROS tf broadcasters
     void publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id);
     void publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg);

@@ -92,4 +92,8 @@ target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper $
 
 add_executable(airsim_node src/airsim_node.cpp)
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(airsim_node lib_airsim_ros_wrapper lib_path_tracking_control ${catkin_LIBRARIES} AirsimWrapper)
+target_link_libraries(airsim_node lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper)
+
+# add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
+add_executable(pid_position_controller_simple_node src/pid_position_controller_simple_node.cpp)
+target_link_libraries(pid_position_controller_simple_node lib_pid_position_controller_simple lib_airsim_ros_wrapper ${catkin_LIBRARIES})
