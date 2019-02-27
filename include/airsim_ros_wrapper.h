@@ -13,11 +13,9 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/GimbalAngleEulerCmd.h>
 #include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
 #include <airsim_ros_pkgs/SetGlobalPosition.h>
-#include <airsim_ros_pkgs/PathXYZVPsi.h>
 #include <airsim_ros_pkgs/WaypointXYZVPsi.h>
 #include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/VelCmd.h>
-#include <airsim_ros_pkgs/PathXYZVPsiSrv.h>
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -39,7 +37,6 @@ STRICT_MODE_ON
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <path_tracking_control.h> // todo namespacing 
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
@@ -115,17 +112,12 @@ public:
     void gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg);
     void gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg);
 
-    /// path controller
-    void init_path_controller();
-    void update_path_tracker();
-    VelControlCmd get_safe_vel_cmd(const VelControlCmd &desired_vel_cmd);
     void set_zero_vel_cmd();
 
     /// ROS service callbacks
     bool takeoff_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool land_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool reset_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-    bool path_srv_cb(airsim_ros_pkgs::PathXYZVPsiSrv::Request& request, airsim_ros_pkgs::PathXYZVPsiSrv::Response& response);
 
     bool set_local_position_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response); 
     bool set_global_position_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response); 
@@ -167,22 +159,7 @@ private:
     bool has_vel_cmd_;
     VelCmd vel_cmd_;
 
-    // todo path controller needs refactoring. take out of ros wrapper
-    PathXYZVPsi path_xyzvpsi_;
-    bool has_path_;
-    bool is_tracking_path_;
-    bool is_path_completed_;
-    double waypoint_float_idx_;
-    double path_tracking_dt_;
-
-    PathTrackingControlParameters controller_params_;
-    PathTrackingControl* controller_;// todo smart pointer
-    PathTrackingControl::PathTrackingControlState controller_state_;
     nav_msgs::Odometry curr_odom_ned_;
-    VelControlCmd path_controller_speed_cmd_; 
-    VelControlCmd safe_speed_cmd_;
-
-    nav_msgs::Odometry lookahead_pose_;
 
     // gimbal control
     bool has_gimbal_cmd_;
@@ -231,7 +208,6 @@ private:
     ros::ServiceServer takeoff_srvr_;
     ros::ServiceServer land_srvr_;
     ros::ServiceServer reset_srvr_;
-    ros::ServiceServer move_on_path_srvr_;
 
     static constexpr char CAM_YML_NAME[]    = "camera_name";
     static constexpr char WIDTH_YML_NAME[]  = "image_width";
