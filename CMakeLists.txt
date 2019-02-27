@@ -50,6 +50,7 @@ add_service_files(
   FILES
   SetGlobalPosition.srv
   SetLocalPosition.srv
+  PathXYZVPsiSrv.srv
 )
 
 generate_messages(

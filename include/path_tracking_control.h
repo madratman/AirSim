@@ -161,7 +161,6 @@ public:
         
 private:
     PathTrackingControlParameters params_;
-    PathTrackingControlParameters control_state_;
 
     // todo take out interpolate etc out of controller class!  
     XYZVPsi interpolate(const XYZVPsi &start_waypoint, const XYZVPsi& end_waypoint, const double &interp_ratio);

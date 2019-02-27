@@ -66,10 +66,10 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
 {
     OdometryEuler curr_state;
     curr_state.from_ros_msg(curr_odom);
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - pos: " << curr_state.position[0] << " / " << curr_state.position[1] << " / " << curr_state.position[2]); 
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - ori: " << curr_state.rpy[0] << " / " << curr_state.rpy[1] << " / " << curr_state.rpy[2]); 
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - lin: " << curr_state.linear_velocity[0] << " / " << curr_state.linear_velocity[1] << " / " << curr_state.linear_velocity[2]); 
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - ang: " << curr_state.angular_velocity[0] << " / " << curr_state.angular_velocity[1] << " / " << curr_state.angular_velocity[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - position: " << curr_state.position[0] << " / " << curr_state.position[1] << " / " << curr_state.position[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - orientation: " << curr_state.rpy[0] << " / " << curr_state.rpy[1] << " / " << curr_state.rpy[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - linear_velocity: " << curr_state.linear_velocity[0] << " / " << curr_state.linear_velocity[1] << " / " << curr_state.linear_velocity[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** current state - angular_velocity: " << curr_state.angular_velocity[0] << " / " << curr_state.angular_velocity[1] << " / " << curr_state.angular_velocity[2]); 
 
     // Create empty control with zero velocity and current heading. 
     VelControlCmd command;
@@ -99,8 +99,9 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
     }
 
     bool is_near_end, is_sharp_corner;
-    XYZVPsi closest_state = project_odom_on_path(curr_state, path, control_state.closest_idx);
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "***angular_velocity closest state: " << closest_state.position[0] << " / " << closest_state.position[1] << " / " << closest_state.position[2]); 
+    XYZVPsi closest_state = project_odom_on_path(curr_state, path, control_state.closest_idx); // control_state.closest_idx is updated here
+    ROS_ERROR_STREAM_THROTTLE(1.0, "***closest state: index" << control_state.closest_idx); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "***closest state: " << closest_state.position[0] << " / " << closest_state.position[1] << " / " << closest_state.position[2]); 
 
     //This is the state we will control to. This looks ahead based on the current speed to account for control reaction delays.
     double speed = curr_state.linear_velocity.norm();
@@ -110,8 +111,9 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
 
     std::pair<XYZVPsi, Eigen::Vector3d> pursuit_state_pair = get_pursuit_state_pair(path, control_state.closest_idx, look_ahead_dist, is_near_end);
     XYZVPsi pursuit_state = pursuit_state_pair.first;
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** pursuit state first: " << pursuit_state.position[0] << " / " << pursuit_state.position[1] << " / " << pursuit_state.position[2]);
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** pursuit state second: " << pursuit_state_pair.second[0] << " / " << pursuit_state_pair.second[1] << " / " << pursuit_state_pair.second[2]);
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** look_ahead_dist: " << look_ahead_dist);
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** pursuit state first: " << pursuit_state.position[0] << " / " << pursuit_state.position[1] << " / " << pursuit_state.position[2]);
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** pursuit state second: " << pursuit_state_pair.second[0] << " / " << pursuit_state_pair.second[1] << " / " << pursuit_state_pair.second[2]);
 
     //Next we also look up if we need to slow down based on our maximum acceleration.
     double stoppingDistance =  get_stopping_distance(speed);
@@ -137,14 +139,14 @@ std::pair<VelControlCmd, bool> PathTrackingControl::get_vel_cmd(double dt, const
     }
 
     Eigen::Vector3d desired_velocity = pursuit_state.vel * pursuit_state_pair.second;
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** desired_velocity: " << desired_velocity[0] << " / " << desired_velocity[1] << " / " << desired_velocity[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** desired_velocity: " << desired_velocity[0] << " / " << desired_velocity[1] << " / " << desired_velocity[2]); 
     Eigen::Vector3d curr_to_closest_vec = closest_state.position - curr_state.position;
-    //ROS_ERROR_STREAM_THROTTLE(1.0, "*** curr_to_closest_vec: " << curr_to_closest_vec[0] << " / " << curr_to_closest_vec[1] << " / " << curr_to_closest_vec[2]); 
+    ROS_ERROR_STREAM_THROTTLE(1.0, "*** curr_to_closest_vec: " << curr_to_closest_vec[0] << " / " << curr_to_closest_vec[1] << " / " << curr_to_closest_vec[2]); 
 
     if (curr_to_closest_vec.norm() < 0.1) // todo unhardcode
     {
         curr_to_closest_vec = pursuit_state.position - curr_state.position;
-        //ROS_ERROR_STREAM_THROTTLE(1.0, "*** curr_to_closest_vec: " << curr_to_closest_vec[0] << " / " << curr_to_closest_vec[1] << " / " << curr_to_closest_vec[2]); 
+        ROS_ERROR_STREAM_THROTTLE(1.0, "*** curr_to_closest_vec: " << curr_to_closest_vec[0] << " / " << curr_to_closest_vec[1] << " / " << curr_to_closest_vec[2]); 
     }
 
     double z_error = curr_to_closest_vec[2];
@@ -430,6 +432,7 @@ std::pair<XYZVPsi, Eigen::Vector3d> PathTrackingControl::get_pursuit_state_pair(
 
     while(!bAtEnd && dist_remaining > 0)
     {
+        std::cout << "while loop\n"; 
         Eigen::Vector3d curr_vector = next_waypt.position - curr_waypt.position;
         double dist_on_seg = curr_vector.norm();
         if (curr_vector.norm() > 0)

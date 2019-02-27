@@ -32,11 +32,11 @@
     <param name="cross_track_DZ" type="double" value="0.01" />
 
     <param name="loop_rate" type="double" value="50.0" />  
-    <param name="max_speed" type="double" value="$(arg max_horiz_veloc)" />
-    <param name="look_ahead_time" type="double" value="$(arg max_horiz_veloc)" />
+    <param name="max_speed" type="double" value="10.0" />
+    <param name="look_ahead_time" type="double" value="1.0" />
     <param name="look_ahead_angle" type="double" value="0.7" />
     <param name="tracking_threshold" type="double" value="10.0" />
-    <param name="deccel_max" type="double" value="$(arg max_horiz_accel)" />
+    <param name="max_deceleration" type="double" value="5.0" />
     <param name="reaction_time" type="double" value="1.15" />
 </node>
 

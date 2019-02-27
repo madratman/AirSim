@@ -14,6 +14,8 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
 {
     initialize_airsim();
     initialize_ros();
+    init_path_controller();
+    in_air_ = false;
 
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
@@ -39,7 +41,7 @@ void AirsimROSWrapper::initialize_airsim()
 void AirsimROSWrapper::initialize_ros()
 {
     // ros params
-    vel_cmd_duration_ = 0.05;
+    vel_cmd_duration_ = 0.05; // todo
     double update_airsim_img_response_every_n_sec;// = 0.0001;
     double update_airsim_control_every_n_sec;// = 0.01;
 
@@ -66,6 +68,7 @@ void AirsimROSWrapper::initialize_ros()
     takeoff_srvr_ = nh_private_.advertiseService("takeoff", &AirsimROSWrapper::takeoff_srv_cb, this);
     land_srvr_ = nh_private_.advertiseService("land", &AirsimROSWrapper::land_srv_cb, this);
     reset_srvr_ = nh_private_.advertiseService("reset",&AirsimROSWrapper::reset_srv_cb, this);
+    move_on_path_srvr_ = nh_private_.advertiseService("path",&AirsimROSWrapper::path_srv_cb, this);
 
     // clock_pub_ = nh_private_.advertise<rosgraph_msgs::Clock>("clock", 10); // mimic gazebo's /use_sim_time feature
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
@@ -75,7 +78,6 @@ void AirsimROSWrapper::initialize_ros()
     front_left_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
     front_right_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
 
-    path_sub_ = nh_private_.subscribe("path", 50, &AirsimROSWrapper::path_cb, this);
     vel_cmd_body_frame_sub_ = nh_private_.subscribe("vel_cmd_body_frame", 50, &AirsimROSWrapper::vel_cmd_body_frame_cb, this); // todo ros::TransportHints().tcpNoDelay();
     vel_cmd_world_frame_sub_ = nh_private_.subscribe("vel_cmd_world_frame", 50, &AirsimROSWrapper::vel_cmd_world_frame_cb, this);
     gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
@@ -99,7 +101,6 @@ void AirsimROSWrapper::init_path_controller()
 
     // Initialize path tracking control
     controller_ = new PathTrackingControl(controller_params_);
-
     // if (!_speed_control_params.load_params(nh_private_))
     // {
     //     ROS_ERROR_STREAM("[AirsimROSWrapper] Failed to load speed control parameters");
@@ -121,6 +122,7 @@ void AirsimROSWrapper::init_path_controller()
 bool AirsimROSWrapper::takeoff_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
     airsim_client_.takeoffAsync()->waitOnLastTask();
+    in_air_ = true;
     return true; //todo
 }
 
@@ -155,8 +157,7 @@ msr::airlib::Quaternionr AirsimROSWrapper::get_airlib_quat(const tf2::Quaternion
 void AirsimROSWrapper::vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
 {
     double roll, pitch, yaw;
-    auto drone_state = airsim_client_.getMultirotorState(); // todo use the state from drone state timer callback
-    tf2::Matrix3x3(get_tf2_quat(drone_state.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
+    tf2::Matrix3x3(get_tf2_quat(curr_drone_state_.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
 
     // todo do actual body frame?
     vel_cmd_.x = (msg.twist.linear.x * cos(yaw)) - (msg.twist.linear.y * sin(yaw)); //body frame assuming zero pitch roll
@@ -183,12 +184,12 @@ void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg
     has_vel_cmd_ = true;
 }
 
-// todo either maintain list of paths or make this a ros service. better ros action
-void AirsimROSWrapper::path_cb(const airsim_ros_pkgs::PathXYZVPsi &path_msg)
+// todo maintain list of paths. ros action?
+bool AirsimROSWrapper::path_srv_cb(airsim_ros_pkgs::PathXYZVPsiSrv::Request& request, airsim_ros_pkgs::PathXYZVPsiSrv::Response& response)
 {
     path_xyzvpsi_ = PathXYZVPsi();
 
-    for (auto waypoint_xvzpsi : path_msg.waypoints)
+    for (auto waypoint_xvzpsi : request.path.waypoints)
     {
         XYZVPsi xyzvpsi;
         xyzvpsi.position[0] = waypoint_xvzpsi.position.x;
@@ -199,8 +200,13 @@ void AirsimROSWrapper::path_cb(const airsim_ros_pkgs::PathXYZVPsi &path_msg)
         path_xyzvpsi_.push_back(xyzvpsi);        
     }
 
+    std::cout<<"path_srv_cb\n";
+    controller_state_.Reset();
     has_path_ = true;
     is_path_completed_ = false;
+
+    response.success = true;
+    return true; // todo error checking
 }
 
 void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg)
@@ -252,7 +258,7 @@ void AirsimROSWrapper::publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg)
 {
     geometry_msgs::TransformStamped odom_tf;
     odom_tf.header = odom_ned_msg.header;
-    odom_tf.child_frame_id = "drone";
+    odom_tf.child_frame_id = odom_ned_msg.child_frame_id; 
     odom_tf.transform.translation.x = odom_ned_msg.pose.pose.position.x;
     odom_tf.transform.translation.y = odom_ned_msg.pose.pose.position.y;
     odom_tf.transform.translation.z = odom_ned_msg.pose.pose.position.z;
@@ -289,12 +295,28 @@ VelControlCmd AirsimROSWrapper::get_safe_vel_cmd(const VelControlCmd &desired_ve
     return desired_vel_cmd;
 }
 
-void AirsimROSWrapper::update_path_tracker()
+void AirsimROSWrapper::set_zero_vel_cmd()
 {
-    
-    nav_msgs::Odometry lookahead_pose;
-    std::pair<VelControlCmd, bool> speed_cmd_is_valid_pair = controller_->get_vel_cmd(path_tracking_dt_, curr_odom_ned_, path_xyzvpsi_, controller_state_, lookahead_pose);
+    vel_cmd_.x = 0.0;
+    vel_cmd_.y = 0.0;
+    vel_cmd_.z = 0.0;
+
+    vel_cmd_.drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
+    // vel_cmd_.yaw_mode = msr::airlib::YawMode(true, msg.twist.angular.z);
+    vel_cmd_.yaw_mode.is_rate = false;
+
+    // todo make class member or a fucntion 
+    double roll, pitch, yaw;
+    tf2::Matrix3x3(get_tf2_quat(curr_drone_state_.kinematics_estimated.pose.orientation)).getRPY(roll, pitch, yaw); // ros uses xyzw
+    vel_cmd_.yaw_mode.yaw_or_rate = yaw;
+}
+
+void AirsimROSWrapper::update_path_tracker()
+{   
+    // fills in lookahead_pose_
+    std::pair<VelControlCmd, bool> speed_cmd_is_valid_pair = controller_->get_vel_cmd(path_tracking_dt_, curr_odom_ned_, path_xyzvpsi_, controller_state_, lookahead_pose_);
     path_controller_speed_cmd_ = speed_cmd_is_valid_pair.first;
+    // ROS_INFO_STREAM_THROTTLE(1.0, "*** path_controller_speed_cmd_.velocity: " << path_controller_speed_cmd_.velocity[0] << " / " << path_controller_speed_cmd_.velocity[1] << " / " << path_controller_speed_cmd_.velocity[2]); 
 
     if (!speed_cmd_is_valid_pair.second)
     {
@@ -304,7 +326,7 @@ void AirsimROSWrapper::update_path_tracker()
 
     unsigned int curr_idx = (int)std::ceil(controller_state_.closest_idx);  
     int pathSize = path_xyzvpsi_.size();
-    ROS_INFO_STREAM_THROTTLE(2.0, "[AirsimROSWrapper] Path Index=" << curr_idx << " [" << path_xyzvpsi_.size());
+    ROS_INFO_STREAM_THROTTLE(2.0, "[AirsimROSWrapper] Path Index: " << curr_idx << " of total: " << path_xyzvpsi_.size());
 
     //Check if reached end of trajectory command
     curr_idx = (unsigned int)std::round(controller_state_.closest_idx);
@@ -313,6 +335,9 @@ void AirsimROSWrapper::update_path_tracker()
         is_path_completed_ = true;
         // todo set has_path_ to false?
         ROS_INFO_STREAM_THROTTLE(1.0, "[AirsimROSWrapper] Path completed");
+        // set_zero_vel_cmd();//hack
+        // has_vel_cmd_ = true;
+        // return;
     }
 
     safe_speed_cmd_ = get_safe_vel_cmd(path_controller_speed_cmd_); // todo extract this into a safety module?
@@ -327,28 +352,30 @@ void AirsimROSWrapper::update_path_tracker()
     vel_cmd_.yaw_mode.is_rate = false;
     vel_cmd_.yaw_mode.yaw_or_rate = safe_speed_cmd_.heading;
     // vel_cmd_.vehicle_name = msg.vehicle_name; //todo
+    std::cout<<"vel_cmd_" << vel_cmd_.x << " / " << vel_cmd_.y << " / " << vel_cmd_.z; 
     has_vel_cmd_ = true;
 }
 
 void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 {
     // get drone state from airsim
-    msr::airlib::MultirotorState drone_state = airsim_client_.getMultirotorState();
+    curr_drone_state_ = airsim_client_.getMultirotorState();
     ros::Time curr_ros_time = ros::Time::now();
 
     // convert airsim drone state to ROS msgs
-    curr_odom_ned_ = get_odom_msg_from_airsim_state(drone_state);
+    curr_odom_ned_ = get_odom_msg_from_airsim_state(curr_drone_state_);
     curr_odom_ned_.header.frame_id = "world";
     curr_odom_ned_.header.stamp = curr_ros_time;
 
-    sensor_msgs::NavSatFix gps_msg = get_gps_msg_from_airsim_state(drone_state);
+    sensor_msgs::NavSatFix gps_msg = get_gps_msg_from_airsim_state(curr_drone_state_);
     gps_msg.header.stamp = curr_ros_time;
 
-    mavros_msgs::State vehicle_state_msg = get_vehicle_state_msg(drone_state);
+    mavros_msgs::State vehicle_state_msg = get_vehicle_state_msg(curr_drone_state_);
 
     // publish to ROS!  
     odom_local_ned_pub_.publish(curr_odom_ned_);
     publish_odom_tf(curr_odom_ned_);
+    publish_odom_tf(lookahead_pose_);//lookahead
     global_gps_pub_.publish(gps_msg);
     vehicle_state_pub_.publish(vehicle_state_msg);
 
@@ -367,6 +394,14 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 
     if (has_gimbal_cmd_)
         airsim_client_.simSetCameraOrientation(gimbal_cmd_.camera_name, gimbal_cmd_.target_quat, gimbal_cmd_.vehicle_name);
+
+    // todo
+    if (in_air_ && !has_vel_cmd_)
+    {
+        set_zero_vel_cmd();
+        airsim_client_.moveByVelocityAsync(vel_cmd_.x, vel_cmd_.y, vel_cmd_.z, vel_cmd_duration_, 
+            msr::airlib::DrivetrainType::MaxDegreeOfFreedom, vel_cmd_.yaw_mode);
+    }
 
     // "clear" control cmds
     has_vel_cmd_ = false;
@@ -531,7 +566,6 @@ void AirsimROSWrapper::read_params_from_yaml_and_fill_cam_info_msg(const std::st
         cam_info.D[i] = D_data[i].as<float>();
     }
 }
-
 
 bool AirsimROSWrapper::set_local_position_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response)
 {
