@@ -31,6 +31,7 @@ STRICT_MODE_ON
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/distortion_models.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <std_srvs/Empty.h>
@@ -138,7 +139,7 @@ public:
     nav_msgs::Odometry get_odom_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
     sensor_msgs::NavSatFix get_gps_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
     mavros_msgs::State get_vehicle_state_msg(msr::airlib::MultirotorState &drone_state);
-
+    sensor_msgs::Imu get_ground_truth_imu_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
 
 private:
     msr::airlib::MultirotorRpcLibClient airsim_client_;
@@ -192,6 +193,7 @@ private:
     ros::Publisher attitude_euler_pub_;
     ros::Publisher attitude_quat_pub_;
     ros::Publisher vehicle_state_pub_;
+    ros::Publisher imu_ground_truth_pub_;
 
     /// ROS Subscribers
     // ros::CallbackQueue img_callback_queue_

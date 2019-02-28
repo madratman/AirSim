@@ -73,6 +73,7 @@ void AirsimROSWrapper::initialize_ros()
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
     global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
+    imu_ground_truth_pub_ = nh_private_.advertise<sensor_msgs::Imu>("imu_ground_truth", 10);
 
     front_left_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
     front_right_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/right/camera_info", 10);
@@ -198,6 +199,36 @@ nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_airsim_state(const msr::a
     return odom_ned_msg;
 }
 
+// todo covariances
+sensor_msgs::Imu AirsimROSWrapper::get_ground_truth_imu_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state)
+{
+    sensor_msgs::Imu imu_msg;
+    // imu_msg.header.frame = ;
+    imu_msg.orientation.x = drone_state.getOrientation().x();
+    imu_msg.orientation.y = drone_state.getOrientation().y();
+    imu_msg.orientation.z = drone_state.getOrientation().z();
+    imu_msg.orientation.w = drone_state.getOrientation().w();
+
+    // imu_msg.orientation_covariance = ;
+
+    // todo radians per second
+    imu_msg.angular_velocity.x = drone_state.kinematics_estimated.twist.angular.x();
+    imu_msg.angular_velocity.y = drone_state.kinematics_estimated.twist.angular.y();
+    imu_msg.angular_velocity.z = drone_state.kinematics_estimated.twist.angular.z();
+
+    // imu_msg.angular_velocity_covariance = ;
+
+    // meters/s2^m
+    imu_msg.linear_acceleration.x = client.getMultirotorState().kinematics_estimated.linear_acceleration.x();
+    imu_msg.linear_acceleration.y = client.getMultirotorState().kinematics_estimated.linear_acceleration.y();
+    imu_msg.linear_acceleration.z = client.getMultirotorState().kinematics_estimated.linear_acceleration.z();
+
+    // imu_msg.linear_acceleration_covariance = ;
+
+    return odom_ned_msg;
+}
+
+
 void AirsimROSWrapper::publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg)
 {
     geometry_msgs::TransformStamped odom_tf;
@@ -265,17 +296,21 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 
     mavros_msgs::State vehicle_state_msg = get_vehicle_state_msg(curr_drone_state_);
 
+    // sensor_msgs::Imu imu_ground_truth_msg = get_ground_truth_imu_msg_from_airsim_state(curr_drone_state_);
+
     // publish to ROS!  
     odom_local_ned_pub_.publish(curr_odom_ned_);
     publish_odom_tf(curr_odom_ned_);
     global_gps_pub_.publish(gps_msg);
     vehicle_state_pub_.publish(vehicle_state_msg);
+    // imu_ground_truth_pub_.publish(imu_ground_truth_msg);//todo. IMU is pretty fast. should be in its own timer callback 
 
     // send control commands from the last callback to airsim
     if (has_vel_cmd_)
         airsim_client_.moveByVelocityAsync(vel_cmd_.x, vel_cmd_.y, vel_cmd_.z, vel_cmd_duration_, 
             msr::airlib::DrivetrainType::MaxDegreeOfFreedom, vel_cmd_.yaw_mode);
 
+    // todo add and expose a gimbal angular velocity to airlib
     if (has_gimbal_cmd_)
         airsim_client_.simSetCameraOrientation(gimbal_cmd_.camera_name, gimbal_cmd_.target_quat, gimbal_cmd_.vehicle_name);
 
