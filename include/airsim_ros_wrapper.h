@@ -16,6 +16,7 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/WaypointXYZVPsi.h>
 #include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/VelCmd.h>
+#include <airsim_ros_pkgs/GPSYaw.h>
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -137,7 +138,8 @@ public:
     msr::airlib::Quaternionr get_airlib_quat(const geometry_msgs::Quaternion& geometry_msgs_quat);
     msr::airlib::Quaternionr get_airlib_quat(const tf2::Quaternion& tf2_quat);
     nav_msgs::Odometry get_odom_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
-    sensor_msgs::NavSatFix get_gps_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point);
+    airsim_ros_pkgs::GPSYaw get_gps_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point);
+    sensor_msgs::NavSatFix get_gps_sensor_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point);
     mavros_msgs::State get_vehicle_state_msg(msr::airlib::MultirotorState &drone_state);
     sensor_msgs::Imu get_ground_truth_imu_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
 
@@ -149,7 +151,7 @@ private:
     ros::NodeHandle nh_private_;
 
     msr::airlib::GeoPoint home_geo_point_;// gps coord of unreal origin 
-    sensor_msgs::NavSatFix home_geo_point_msg_; // todo duplicate
+    airsim_ros_pkgs::GPSYaw home_geo_point_msg_; // todo duplicate
 
     bool in_air_; // todo not really used 
     double max_horz_vel_;
@@ -197,7 +199,8 @@ private:
     ros::Publisher attitude_quat_pub_;
     ros::Publisher vehicle_state_pub_;
     ros::Publisher imu_ground_truth_pub_;
-    ros::Publisher home_geo_point_pub_;
+    ros::Publisher origin_geo_point_pub_; // geo coord of unreal origin
+    ros::Publisher home_geo_point_pub_; // home geo coord of drones
 
     /// ROS Subscribers
     // ros::CallbackQueue img_callback_queue_

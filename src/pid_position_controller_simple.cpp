@@ -32,7 +32,7 @@ bool DynamicConstraints::load_from_rosparams(const ros::NodeHandle &nh)
 
 PIDPositionController::PIDPositionController(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     : nh_(nh), nh_private_(nh_private), 
-    has_odom_(false), has_goal_(false), reached_goal_(false), got_goal_once_(false)
+    has_odom_(false), has_goal_(false), reached_goal_(false), got_goal_once_(false), has_home_geo_(false)
 {
     params_.load_from_rosparams(nh_private_);
     constraints_.load_from_rosparams(nh_);
@@ -60,14 +60,16 @@ void PIDPositionController::initialize_ros()
  
     // ROS subscribers
     airsim_odom_sub_ = nh_.subscribe("/airsim_node/odom_local_ned", 50, &PIDPositionController::airsim_odom_cb, this);
+    home_geopoint_sub_ = nh_.subscribe("/airsim_node/home_geo_point", 50, &PIDPositionController::home_geopoint_cb, this);
     // todo publish this under global nodehandle / "airsim node" and hide it from user
     local_position_goal_srvr_ = nh_.advertiseService("/airsim_node/local_position_goal", &PIDPositionController::local_position_goal_srv_cb, this);
+    gps_goal_srvr_ = nh_.advertiseService("/airsim_node/gps_goal", &PIDPositionController::gps_goal_srv_cb, this);
 
     // ROS timers
     update_control_cmd_timer_ = nh_private_.createTimer(ros::Duration(update_control_every_n_sec), &PIDPositionController::update_control_cmd_timer_cb, this);
 }
 
-void PIDPositionController::airsim_odom_cb(const nav_msgs::Odometry odom_msg)
+void PIDPositionController::airsim_odom_cb(const nav_msgs::Odometry& odom_msg)
 {
     has_odom_ = true;
     curr_odom_ = odom_msg;
@@ -119,6 +121,43 @@ bool PIDPositionController::local_position_goal_srv_cb(airsim_ros_pkgs::SetLocal
     }
 }
 
+void PIDPositionController::home_geopoint_cb(const airsim_ros_pkgs::GPSYaw& gps_msg)
+{
+    if(has_home_geo_)
+        return;
+    gps_home_msg_ = gps_msg;
+    has_home_geo_ = true;
+}
+
+bool PIDPositionController::gps_goal_srv_cb(airsim_ros_pkgs::SetGPSPosition::Request& request, airsim_ros_pkgs::SetGPSPosition::Response& response)
+{
+    if(!has_home_geo_)
+    {
+        ROS_ERROR_STREAM("[PIDPositionController] I don't have home GPS coord. Can't go to GPS goal!");
+        response.success = false;
+    }
+
+    // convert GPS goal to NED goal
+
+    if (!has_goal_)
+    {
+        msr::airlib::GeoPoint goal_gps_point(request.latitude, request.longitude, request.altitude);
+        msr::airlib::GeoPoint gps_home(gps_home_msg_.latitude, gps_home_msg_.longitude, gps_home_msg_.altitude);
+        msr::airlib::Vector3r ned_goal = msr::airlib::EarthUtils::GeodeticToNedFast(goal_gps_point, gps_home);
+        target_position_.x = ned_goal[0];
+        target_position_.y = ned_goal[1];
+        target_position_.z = ned_goal[2];
+        target_position_.yaw = request.yaw;
+        ROS_INFO_STREAM("[PIDPositionController] got goal: x=" << target_position_.x << " y=" << target_position_.y << " z=" << target_position_.z << " yaw=" << target_position_.yaw );
+
+        // todo error checks 
+        // todo fill response
+        has_goal_ = true;
+        reached_goal_ = false;
+        reset_errors(); // todo
+        return true;
+    }
+}
 void PIDPositionController::update_control_cmd_timer_cb(const ros::TimerEvent& event)
 {
     // todo check if odometry is too old!!

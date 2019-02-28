@@ -1,15 +1,27 @@
 #ifndef _PID_POSITION_CONTROLLER_SIMPLE_H_
 #define _PID_POSITION_CONTROLLER_SIMPLE_H_
 
+#include "common/common_utils/StrictMode.hpp"
+STRICT_MODE_OFF //todo what does this do?
+#ifndef RPCLIB_MSGPACK
+#define RPCLIB_MSGPACK clmdep_msgpack
+#endif // !RPCLIB_MSGPACK
+#include "rpc/rpc_error.h"
+STRICT_MODE_ON
+
+#include "common/common_utils/FileSystem.hpp"
+#include "vehicles/multirotor/api/MultirotorRpcLibClient.hpp"
+
 #include <ros/ros.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <Eigen/Core>
 #include <nav_msgs/Odometry.h>
 #include <math.h>
 #include <airsim_ros_pkgs/VelCmd.h>
 #include <airsim_ros_pkgs/SetLocalPosition.h>
+#include <airsim_ros_pkgs/SetGPSPosition.h>
+#include <airsim_ros_pkgs/GPSYaw.h>
 
 // todo nicer api
 class PIDParams
@@ -72,11 +84,11 @@ public:
 
     // ROS service callbacks
     bool local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response); 
-    // todo airsim_node should publish geo coordinates for conversion outside
-    // bool gps_goal_srv_cb(airsim_ros_pkgs::SetGlobalPosition::Request& request, airsim_ros_pkgs::SetGlobalPosition::Response& response);
+    bool gps_goal_srv_cb(airsim_ros_pkgs::SetGPSPosition::Request& request, airsim_ros_pkgs::SetGPSPosition::Response& response);
 
     // ROS subscriber callbacks
-    void airsim_odom_cb(const nav_msgs::Odometry odom_msg);
+    void airsim_odom_cb(const nav_msgs::Odometry& odom_msg);
+    void home_geopoint_cb(const airsim_ros_pkgs::GPSYaw& gps_msg);
 
     void update_control_cmd_timer_cb(const ros::TimerEvent& event);
 
@@ -87,7 +99,6 @@ public:
     void enforce_dynamic_constraints();
     void publish_control_cmd();
     void check_reached_goal();
-
 
 private:
     ros::NodeHandle nh_;
@@ -100,6 +111,9 @@ private:
     XYZYaw prev_error_;
     XYZYaw curr_error_;
 
+    bool has_home_geo_;
+    airsim_ros_pkgs::GPSYaw gps_home_msg_;
+
     nav_msgs::Odometry curr_odom_;
     airsim_ros_pkgs::VelCmd vel_cmd_;
     bool reached_goal_;
@@ -110,7 +124,9 @@ private:
 
     ros::Publisher airsim_vel_cmd_world_frame_pub_;
     ros::Subscriber airsim_odom_sub_;
+    ros::Subscriber home_geopoint_sub_;
     ros::ServiceServer local_position_goal_srvr_;
+    ros::ServiceServer gps_goal_srvr_;
 
     ros::Timer update_control_cmd_timer_;
 };

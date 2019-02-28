@@ -41,6 +41,7 @@ add_message_files(
   FILES
   GimbalAngleEulerCmd.msg
   GimbalAngleQuatCmd.msg
+  GPSYaw.msg
   VelCmd.msg
   WaypointXYZVPsi.msg
   PathXYZVPsi.msg
@@ -48,7 +49,7 @@ add_message_files(
 
 add_service_files(
   FILES
-  SetGlobalPosition.srv
+  SetGPSPosition.srv
   SetLocalPosition.srv
   PathXYZVPsiSrv.srv
 )
@@ -96,4 +97,4 @@ target_link_libraries(airsim_node lib_airsim_ros_wrapper ${catkin_LIBRARIES} Air
 
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
 add_executable(pid_position_controller_simple_node src/pid_position_controller_simple_node.cpp)
-target_link_libraries(pid_position_controller_simple_node lib_pid_position_controller_simple lib_airsim_ros_wrapper ${catkin_LIBRARIES})
+target_link_libraries(pid_position_controller_simple_node lib_pid_position_controller_simple lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper)

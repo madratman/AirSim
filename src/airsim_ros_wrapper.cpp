@@ -28,7 +28,7 @@ void AirsimROSWrapper::initialize_airsim()
         airsim_client_.confirmConnection();
         airsim_client_.enableApiControl(true); // todo expose as rosservice?
         airsim_client_.armDisarm(true); // todo expose as rosservice?
-        home_geo_point_ = airsim_client_.getHomeGeoPoint();
+        home_geo_point_ = airsim_client_.getHomeGeoPoint("");// todo scale to multiple drones
         home_geo_point_msg_ = get_gps_msg_from_airsim_geo_point(home_geo_point_);
     }
     catch (rpc::rpc_error&  e)
@@ -73,7 +73,7 @@ void AirsimROSWrapper::initialize_ros()
     // clock_pub_ = nh_private_.advertise<rosgraph_msgs::Clock>("clock", 10); // mimic gazebo's /use_sim_time feature
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
-    global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
+    global_gps_pub_ = nh_private_.advertise<airsim_ros_pkgs::GPSYaw>("global_gps", 10);
     home_geo_point_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("home_geo_point", 10);
     imu_ground_truth_pub_ = nh_private_.advertise<sensor_msgs::Imu>("imu_ground_truth", 10);
 
@@ -248,7 +248,16 @@ void AirsimROSWrapper::publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg)
     tf_broadcaster_.sendTransform(odom_tf);
 }
 
-sensor_msgs::NavSatFix AirsimROSWrapper::get_gps_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point)
+airsim_ros_pkgs::GPSYaw AirsimROSWrapper::get_gps_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point)
+{
+    airsim_ros_pkgs::GPSYaw gps_msg;
+    gps_msg.latitude = geo_point.latitude;
+    gps_msg.longitude = geo_point.longitude; 
+    gps_msg.altitude = geo_point.altitude;
+    return gps_msg;
+}
+
+sensor_msgs::NavSatFix AirsimROSWrapper::get_gps_sensor_msg_from_airsim_geo_point(const msr::airlib::GeoPoint &geo_point)
 {
     sensor_msgs::NavSatFix gps_msg;
     gps_msg.latitude = geo_point.latitude;
@@ -295,8 +304,8 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
     curr_odom_ned_.header.frame_id = "world";
     curr_odom_ned_.header.stamp = curr_ros_time;
 
-    sensor_msgs::NavSatFix gps_msg = get_gps_msg_from_airsim_geo_point(curr_drone_state_.gps_location);
-    gps_msg.header.stamp = curr_ros_time;
+    sensor_msgs::NavSatFix gps_sensor_msg = get_gps_sensor_msg_from_airsim_geo_point(curr_drone_state_.gps_location);
+    gps_sensor_msg.header.stamp = curr_ros_time;
 
     mavros_msgs::State vehicle_state_msg = get_vehicle_state_msg(curr_drone_state_);
 
@@ -305,7 +314,7 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
     // publish to ROS!  
     odom_local_ned_pub_.publish(curr_odom_ned_);
     publish_odom_tf(curr_odom_ned_);
-    global_gps_pub_.publish(gps_msg);
+    global_gps_pub_.publish(gps_sensor_msg);
     home_geo_point_pub_.publish(home_geo_point_msg_);
     vehicle_state_pub_.publish(vehicle_state_msg);
     // imu_ground_truth_pub_.publish(imu_ground_truth_msg);//todo. IMU is pretty fast. should be in its own timer callback 
