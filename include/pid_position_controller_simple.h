@@ -99,11 +99,13 @@ private:
     XYZYaw curr_position_;
     XYZYaw prev_error_;
     XYZYaw curr_error_;
+
     nav_msgs::Odometry curr_odom_;
     airsim_ros_pkgs::VelCmd vel_cmd_;
     bool reached_goal_;
     bool has_goal_;
     bool has_odom_;
+    bool got_goal_once_;
     // todo check for odom msg being older than n sec
 
     ros::Publisher airsim_vel_cmd_world_frame_pub_;

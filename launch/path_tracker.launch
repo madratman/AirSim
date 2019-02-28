@@ -1,5 +1,5 @@
 <!-- path tracking control parameters -->
-<param name="cross_track_P" type="double" value="0.50" />
+<!-- <param name="cross_track_P" type="double" value="0.50" />
 <param name="cross_track_I" type="double" value="0.10" />
 <param name="cross_track_D" type="double" value="0.001" />
 <param name="cross_track_IMax" type="double" value="1.5" />
@@ -13,4 +13,4 @@
 <param name="look_ahead_angle" type="double" value="0.7" />
 <param name="tracking_threshold" type="double" value="10.0" />
 <param name="max_deceleration" type="double" value="5.0" />
-<param name="reaction_time" type="double" value="1.15" />
+<param name="reaction_time" type="double" value="1.15" /> -->

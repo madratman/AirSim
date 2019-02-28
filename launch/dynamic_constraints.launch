@@ -1,0 +1,6 @@
+<launch>
+<!-- Vehicle limits -->
+    <!-- todo this should be its own launch file -->
+    <param name="max_vel_vert_abs" type="double" value="5.0" />
+    <param name="max_vel_horz_abs" type="double" value="5.0" />
+</launch>

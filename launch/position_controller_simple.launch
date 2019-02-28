@@ -1,20 +1,18 @@
 <launch>
 
 <!-- global -->
-    <param name="kp_x" type="double" value="0.50" />
-    <param name="kp_y" type="double" value="0.50" />
-    <param name="kp_z" type="double" value="0.50" />
-    <param name="kp_yaw" type="double" value="0.50" />
+    <param name="kp_x" type="double" value="0.30" />
+    <param name="kp_y" type="double" value="0.30" />
+    <param name="kp_z" type="double" value="0.30" />
+    <param name="kp_yaw" type="double" value="0.30" />
 
-    <param name="kd_x" type="double" value="0.1" />
-    <param name="kd_y" type="double" value="0.1" />
-    <param name="kd_z" type="double" value="0.1" />
-    <param name="kd_yaw" type="double" value="0.1" />
+    <param name="kd_x" type="double" value="0.05" />
+    <param name="kd_y" type="double" value="0.05" />
+    <param name="kd_z" type="double" value="0.05" />
+    <param name="kd_yaw" type="double" value="0.05" />
 
-<!-- Vehicle limits -->
-    <!-- todo this should be its own launch file -->
-    <param name="max_vel_vert_abs" type="double" value="5.0" />
-    <param name="max_vel_horz_abs" type="double" value="10.0" />
+    <param name="reached_thresh_xyz" type="double" value="0.1" />
+    <!-- <param name="active_hover" type="bool" value="true" /> -->
 
 <!-- PID position controller node -->
     <node name="pid_position_controller_simple_node" pkg="airsim_ros_pkgs" type="pid_position_controller_simple_node" output="screen">

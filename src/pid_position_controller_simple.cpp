@@ -32,7 +32,7 @@ bool DynamicConstraints::load_from_rosparams(const ros::NodeHandle &nh)
 
 PIDPositionController::PIDPositionController(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     : nh_(nh), nh_private_(nh_private), 
-    has_odom_(false), has_goal_(false), reached_goal_(false)
+    has_odom_(false), has_goal_(false), reached_goal_(false), got_goal_once_(false)
 {
     params_.load_from_rosparams(nh_private_);
     constraints_.load_from_rosparams(nh_);
@@ -56,7 +56,7 @@ void PIDPositionController::initialize_ros()
     nh_private_.getParam("update_control_every_n_sec", update_control_every_n_sec);
 
     // ROS publishers
-    airsim_vel_cmd_world_frame_pub_ = nh_private_.advertise<airsim_ros_pkgs::VelCmd>("/vel_cmd_body_frame", 1);
+    airsim_vel_cmd_world_frame_pub_ = nh_private_.advertise<airsim_ros_pkgs::VelCmd>("/vel_cmd_world_frame", 1);
  
     // ROS subscribers
     airsim_odom_sub_ = nh_.subscribe("/airsim_node/odom_local_ned", 50, &PIDPositionController::airsim_odom_cb, this);
@@ -91,6 +91,10 @@ void PIDPositionController::check_reached_goal()
 
 bool PIDPositionController::local_position_goal_srv_cb(airsim_ros_pkgs::SetLocalPosition::Request& request, airsim_ros_pkgs::SetLocalPosition::Response& response)
 {
+    // this tells the update timer callback to not do active hovering 
+    if(!got_goal_once_)
+        got_goal_once_ = true;
+
     if (has_goal_ && !reached_goal_)
     {
         // todo maintain array of position goals
@@ -117,6 +121,8 @@ bool PIDPositionController::local_position_goal_srv_cb(airsim_ros_pkgs::SetLocal
 
 void PIDPositionController::update_control_cmd_timer_cb(const ros::TimerEvent& event)
 {
+    // todo check if odometry is too old!!
+    // if no odom, don't do anything. 
     if (!has_odom_)
     {
         ROS_ERROR_STREAM("[PIDPositionController] Waiting for odometry!");
@@ -128,14 +134,23 @@ void PIDPositionController::update_control_cmd_timer_cb(const ros::TimerEvent& e
         check_reached_goal();
         if(reached_goal_)
         {
-            ROS_INFO_STREAM("[PIDPositionController] Reached goal!");
+            ROS_INFO_STREAM("[PIDPositionController] Reached goal! Hovering at position.");
             has_goal_ = false;
+            // dear future self, this function doesn't return coz we need to keep on actively hovering at last goal pose. don't act smart
         }
+        else
+        {
+            ROS_INFO_STREAM("[PIDPositionController] Moving to goal.");
+        }
+    }
 
+    // only compute and send control commands for hovering / moving to pose, if we received a goal at least once in the past  
+    if (got_goal_once_)
+    {
         compute_control_cmd();
         enforce_dynamic_constraints();
         publish_control_cmd();
-    }
+    }    
 }
 
 void PIDPositionController::compute_control_cmd()
