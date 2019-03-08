@@ -22,6 +22,7 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/SetGPSPosition.h>
 #include <airsim_ros_pkgs/GPSYaw.h>
+#include<geodetic_conv.hpp>
 
 // todo nicer api
 class PIDParams
@@ -101,6 +102,9 @@ public:
     void check_reached_goal();
 
 private:
+    geodetic_converter::GeodeticConverter geodetic_converter_;
+    bool use_eth_lib_for_geodetic_conv_;
+
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
 
