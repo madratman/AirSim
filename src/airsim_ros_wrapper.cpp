@@ -23,6 +23,7 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
 
 void AirsimROSWrapper::initialize_airsim()
 {
+    // todo do not reset if already in air?
     try
     {
         airsim_client_.confirmConnection();
@@ -73,8 +74,8 @@ void AirsimROSWrapper::initialize_ros()
     // clock_pub_ = nh_private_.advertise<rosgraph_msgs::Clock>("clock", 10); // mimic gazebo's /use_sim_time feature
     vehicle_state_pub_ = nh_private_.advertise<mavros_msgs::State>("vehicle_state", 10);
     odom_local_ned_pub_ = nh_private_.advertise<nav_msgs::Odometry>("odom_local_ned", 10);
-    global_gps_pub_ = nh_private_.advertise<airsim_ros_pkgs::GPSYaw>("global_gps", 10);
-    home_geo_point_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("home_geo_point", 10);
+    global_gps_pub_ = nh_private_.advertise<sensor_msgs::NavSatFix>("global_gps", 10);
+    home_geo_point_pub_ = nh_private_.advertise<airsim_ros_pkgs::GPSYaw>("home_geo_point", 10);
     imu_ground_truth_pub_ = nh_private_.advertise<sensor_msgs::Imu>("imu_ground_truth", 10);
 
     front_left_cam_info_pub_ = nh_.advertise<sensor_msgs::CameraInfo> ("front/left/camera_info", 10);
@@ -425,8 +426,9 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     std_msgs::Header tf_header;
     tf_header.stamp = curr_ros_time;
     tf_header.frame_id = "world";
-    publish_camera_tf(img_response.at(0), tf_header, "airsim/cam_front_left");
-    publish_camera_tf(img_response.at(1), tf_header, "airsim/cam_front_right");
+    // todo make topic name a param. this should be same as calib/*.yamls, or else the point cloud can't be viewed in rviz.
+    publish_camera_tf(img_response.at(0), tf_header, "airsim/front/left");
+    publish_camera_tf(img_response.at(1), tf_header, "airsim/front/right");
 
     // publish everything
     front_right_img_raw_pub_.publish(bgr_front_right_msg);

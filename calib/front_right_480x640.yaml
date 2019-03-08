@@ -1,10 +1,10 @@
-image_width: 1080		
-image_height: 720
-camera_name: airsim/front/left
+image_width: 640		
+image_height: 480
+camera_name: front/right
 camera_matrix:
   rows: 3
   cols: 3
-  data: [540.0, 0.0, 540.0, 0.0, 540.0, 360.0, 0.0, 0.0, 1.0]
+  data: [320.0, 0.0, 320.0, 0.0, 320.0, 240.0, 0.0, 0.0, 1.0]
 distortion_model: plumb_bob
 distortion_coefficients:
   rows: 1
@@ -17,4 +17,4 @@ rectification_matrix:
 projection_matrix:
   rows: 3
   cols: 4
-  data: [540.0, 0.0, 540.0, 0.0, 0.0, 540.0, 360.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+  data: [320.0, 0.0, 320.0, -120.0, 0.0, 320.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]

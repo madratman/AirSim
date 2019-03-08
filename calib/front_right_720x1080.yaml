@@ -1,6 +1,6 @@
 image_width: 1080		
 image_height: 720
-camera_name: airsim/front/right
+camera_name: front/right
 camera_matrix:
   rows: 3
   cols: 3

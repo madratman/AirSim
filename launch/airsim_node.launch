@@ -12,11 +12,15 @@
     <!-- Camera calibration -->
     <!-- todo add relative path -->
     <!-- ubuntu -->
-    <param name="front_left_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left.yaml" />
-    <param name="front_right_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right.yaml" />
+    <!-- <param name="front_left_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left_720x1080.yaml" /> -->
+    <!-- <param name="front_right_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right_720x1080.yaml" /> -->
+    <!-- <param name="front_left_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left_480x640.yaml" /> -->
+    <!-- <param name="front_right_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right_480x640.yaml" /> -->
     <!-- windows -->
-    <!-- <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left.yaml" /> -->
-    <!-- <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right.yaml" /> -->
+    <!-- <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left_720x1080.yaml" /> -->
+    <!-- <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right_720x1080.yaml" /> -->
+    <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left_480x640.yaml" />
+    <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right_480x640.yaml" />
 
 </node>
 
