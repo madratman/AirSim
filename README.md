@@ -48,56 +48,55 @@ rviz -d rviz/default.rviz
 # ROS API
 ## AirSim ROS Wrapper Node
 ### Publishers:
-- /global_gps [sensor_msgs/NavSatFix] -- TODO: description
-- /home_geo_point [airsim_ros_pkgs/GPSYaw] -- TODO: description
-- /imu_ground_truth [sensor_msgs/Imu] -- TODO: description
-- /odom_local_ned [nav_msgs/Odometry] -- TODO: description
-- /vehicle_state [mavros_msgs/State] -- TODO: description
-- /front/left/camera_info [sensor_msgs/CameraInfo] -- TODO: description
-- /front/left/depth_planar [sensor_msgs/Image] -- TODO: description
-- /front/left/image_raw [sensor_msgs/Image] -- TODO: description
-- /front/right/camera_info [sensor_msgs/CameraInfo] -- TODO: description
-- /front/right/image_raw [sensor_msgs/Image] -- TODO: description
-- /tf [tf2_msgs/TFMessage] -- TODO: description
+- `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html) -- TODO: description
+- `/home_geo_point` [airsim_ros_pkgs/GPSYaw]() -- TODO: description
+- `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html) -- TODO: description
+- `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html) -- TODO: description
+- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html) -- TODO: description
+- `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html) -- TODO: description
+- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
+- `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html) -- TODO: description
+- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
+- `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
+- `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html) -- TODO: description
 
 ### Subscribers:
-- /gimbal_angle_euler_cmd [airsim_ros_pkgs/GimbalAngleEulerCmd] -- TODO: description
-- /gimbal_angle_quat_cmd [airsim_ros_pkgs/GimbalAngleQuatCmd] -- TODO: description
-- /vel_cmd_body_frame [airsim_ros_pkgs/VelCmd] -- TODO: description
-- /vel_cmd_world_frame [airsim_ros_pkgs/VelCmd] -- TODO: description
+- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd] -- TODO: description
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd] -- TODO: description
+- `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
+- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
 
 ### Services:
-- /land [TODO: type] -- TODO: description
-- /reset [TODO: type] -- TODO: description
-- /takeoff [TODO: type] -- TODO: description
+- `/land` [TODO: type] -- TODO: description
+- `/reset` [TODO: type] -- TODO: description
+- `/takeoff` [TODO: type] -- TODO: description
 
 ### Parameters:
-- /front_left_calib_file [TODO: type] -- TODO: description
-- /front_right_calib_file [TODO: type] -- TODO: description
-- /update_airsim_control_every_n_sec [TODO: type] -- TODO: description
-- /update_airsim_img_response_every_n_sec [TODO: type] -- TODO: description
-- /max_horz_vel [TODO: type] -- TODO: description
-- /max_vert_vel_ [TODO: type] -- TODO: description
+- `/front_left_calib_file` [string] -- Default: `airsim_ros_pkgs/calib/front_left_480x640.yaml`
+- `/front_right_calib_file` [string] -- Default: `airsim_ros_pkgs/calib/front_right_480x640.yaml`
+- `/update_airsim_control_every_n_sec` [double] -- TODO: description
+- `/update_airsim_img_response_every_n_sec` [double] -- TODO: description
+- `/max_horz_vel` [double] -- TODO: description
+- `/max_vert_vel_` [double] -- TODO: description
 
 ## Simple PID Position Controller Node 
 
 ### Parameters:
-- /enable_statistics [TODO: type] -- TODO: description
-- /max_vel_horz_abs [TODO: type] -- TODO: description
-- /max_vel_vert_abs [TODO: type] -- TODO: description
-- /kp_x [TODO: type] -- TODO: description
-- /update_control_every_n_sec [TODO: type] -- TODO: description
+- `/max_vel_horz_abs` [double] -- TODO: description
+- `/max_vel_vert_abs` [double] -- TODO: description
+- `/kp_x` [double] -- TODO: description
+- `/update_control_every_n_sec` [TODO: type] -- TODO: description
 
 ### Services:
-- /airsim_node/gps_goal [TODO: type] -- TODO: description
-- /airsim_node/local_position_goal [TODO: type] -- TODO: description
+- `/airsim_node/gps_goal` [Request: airsim_ros_pkgs/GPSYaw] -- TODO: description
+- `/airsim_node/local_position_goal` [Request: airsim_ros_pkgs/XYZYaw] -- TODO: description
 
 ### Subscribers:
-- /airsim_node/home_geo_point [airsim_ros_pkgs/GPSYaw] -- TODO: description
-- /airsim_node/odom_local_ned [nav_msgs/Odometry] -- TODO: description
+- `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw] -- TODO: description
+- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html) -- TODO: description
 
 ### Publishers:
-- /vel_cmd_world_frame [airsim_ros_pkgs/VelCmd] -- TODO: description
+- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
 
 
 # AirSim camera settings 
