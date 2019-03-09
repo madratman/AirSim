@@ -15,6 +15,7 @@ bool PIDParams::load_from_rosparams(const ros::NodeHandle &nh)
     found = found && nh.getParam("kd_yaw", kd_yaw);
 
     found = found && nh.getParam("reached_thresh_xyz", reached_thresh_xyz);
+    found = found && nh.getParam("reached_yaw_degrees", reached_yaw_degrees);
 
     return found;
 }
@@ -25,6 +26,7 @@ bool DynamicConstraints::load_from_rosparams(const ros::NodeHandle &nh)
 
     found = found && nh.getParam("max_vel_horz_abs", max_vel_horz_abs);
     found = found && nh.getParam("max_vel_vert_abs", max_vel_vert_abs);
+    found = found && nh.getParam("max_yaw_rate_degree", max_yaw_rate_degree);
 
     return found;
 }
@@ -76,18 +78,22 @@ void PIDPositionController::airsim_odom_cb(const nav_msgs::Odometry& odom_msg)
     curr_position_.x = odom_msg.pose.pose.position.x;
     curr_position_.y = odom_msg.pose.pose.position.y;
     curr_position_.z = odom_msg.pose.pose.position.z;
-    // curr_position_.yaw = odom_msg.pose.pose.position.yaw; // todo
+    curr_position_.yaw = utils::get_yaw_from_quat_msg(odom_msg.pose.pose.orientation);
 }
 
 // todo maintain internal representation as eigen vec?
 // todo check if low velocity if within thresh?
+// todo maintain separate errors for XY and Z
 void PIDPositionController::check_reached_goal()
 {
-    double euler_xyz = sqrt((target_position_.x - curr_position_.x) * (target_position_.x - curr_position_.x) 
+    double diff_xyz = sqrt((target_position_.x - curr_position_.x) * (target_position_.x - curr_position_.x) 
                         + (target_position_.y - curr_position_.y) * (target_position_.y - curr_position_.y)
                         + (target_position_.z - curr_position_.z) * (target_position_.z - curr_position_.z));
-    // double dyaw = (target_position_.x - target_position_.x)
-    if (euler_xyz < params_.reached_thresh_xyz)
+
+    double diff_yaw = math_common::angular_dist(target_position_.yaw, curr_position_.yaw);
+
+    // todo save this in degrees somewhere to avoid repeated conversion
+    if (diff_xyz < params_.reached_thresh_xyz && diff_yaw < math_common::deg2rad(params_.reached_yaw_degrees))
         reached_goal_ = true; 
 }
 
@@ -167,7 +173,7 @@ bool PIDPositionController::gps_goal_srv_cb(airsim_ros_pkgs::SetGPSPosition::Req
             target_position_.z = ned_goal[2];
         }
 
-        target_position_.yaw = request.yaw;//todo
+        target_position_.yaw = request.yaw; // todo
         ROS_INFO_STREAM("[PIDPositionController] got GPS goal: lat=" << goal_gps_point.latitude << " long=" << goal_gps_point.longitude << " alt=" << goal_gps_point.altitude << " yaw=" << target_position_.yaw );
         ROS_INFO_STREAM("[PIDPositionController] converted NED goal is: x=" << target_position_.x << " y=" << target_position_.y << " z=" << target_position_.z << " yaw=" << target_position_.yaw );
 
@@ -218,24 +224,24 @@ void PIDPositionController::compute_control_cmd()
     curr_error_.x = target_position_.x - curr_position_.x;
     curr_error_.y = target_position_.y - curr_position_.y;
     curr_error_.z = target_position_.z - curr_position_.z;
-    // curr_error_.yaw = target_position_.yaw - curr_position_.yaw;
-   
+    curr_error_.yaw = math_common::angular_dist(curr_position_.yaw, target_position_.yaw);
+
     double p_term_x = params_.kp_x * curr_error_.x;
     double p_term_y = params_.kp_y * curr_error_.y;
     double p_term_z = params_.kp_z * curr_error_.z;
-    // p_term_yaw = params_.kp_yaw * curr_error_.yaw
+    double p_term_yaw = params_.kp_yaw * curr_error_.yaw;
 
     double d_term_x = params_.kd_x * prev_error_.x;
     double d_term_y = params_.kd_y * prev_error_.y;
     double d_term_z = params_.kd_z * prev_error_.z;
-    // d_term_yaw = params_.kp_yaw * prev_error_.yaw
+    double d_term_yaw = params_.kp_yaw * prev_error_.yaw;
 
     prev_error_ = curr_error_;
 
     vel_cmd_.twist.linear.x = p_term_x + d_term_x;
     vel_cmd_.twist.linear.y = p_term_y + d_term_y;
     vel_cmd_.twist.linear.z = p_term_z + d_term_z;
-    // vel_cmd_.twist.angular.z = 0.0; // todo
+    vel_cmd_.twist.angular.z = p_term_yaw + d_term_yaw; // todo
 }
 
 void PIDPositionController::enforce_dynamic_constraints()
@@ -251,10 +257,18 @@ void PIDPositionController::enforce_dynamic_constraints()
 
     if (std::fabs(vel_cmd_.twist.linear.z) > constraints_.max_vel_vert_abs)
     {
-        // just do a sgn?
+        // todo just add a sgn funciton in common utils? return double to be safe. 
+        // template <typename T> double sgn(T val) { return (T(0) < val) - (val < T(0)); }
         vel_cmd_.twist.linear.z = (vel_cmd_.twist.linear.z / std::fabs(vel_cmd_.twist.linear.z)) * constraints_.max_vel_vert_abs; 
     }
     // todo yaw limits
+    if (std::fabs(vel_cmd_.twist.linear.z) > constraints_.max_yaw_rate_degree)
+    {
+        // todo just add a sgn funciton in common utils? return double to be safe. 
+        // template <typename T> double sgn(T val) { return (T(0) < val) - (val < T(0)); }
+        vel_cmd_.twist.linear.z = (vel_cmd_.twist.linear.z / std::fabs(vel_cmd_.twist.linear.z)) * constraints_.max_yaw_rate_degree;
+    }
+
 }
 
 void PIDPositionController::publish_control_cmd()

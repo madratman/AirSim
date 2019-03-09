@@ -12,7 +12,7 @@
     <param name="kd_yaw" type="double" value="0.05" />
 
     <param name="reached_thresh_xyz" type="double" value="0.1" />
-    <!-- <param name="active_hover" type="bool" value="true" /> -->
+    <param name="reached_yaw_degrees" type="double" value="5.0" />
 
 <!-- PID position controller node -->
     <node name="pid_position_controller_simple_node" pkg="airsim_ros_pkgs" type="pid_position_controller_simple_node" output="screen">

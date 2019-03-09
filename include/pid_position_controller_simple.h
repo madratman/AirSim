@@ -22,7 +22,9 @@ STRICT_MODE_ON
 #include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/SetGPSPosition.h>
 #include <airsim_ros_pkgs/GPSYaw.h>
-#include<geodetic_conv.hpp>
+#include <geodetic_conv.hpp>
+#include <math_common.h>
+#include <utils.h>
 
 // todo nicer api
 class PIDParams
@@ -38,6 +40,7 @@ public:
     double kd_yaw;
 
     double reached_thresh_xyz;
+    double reached_yaw_degrees;
 
     PIDParams():
         kp_x(0.5),
@@ -48,7 +51,8 @@ public:
         kd_y(0.1),
         kd_z(0.1),
         kd_yaw(0.1),
-        reached_thresh_xyz(0.5)
+        reached_thresh_xyz(0.5),
+        reached_yaw_degrees(5.0)
         {}
 
     bool load_from_rosparams(const ros::NodeHandle& nh);
@@ -69,10 +73,12 @@ class DynamicConstraints
 public:
     double max_vel_horz_abs; // meters/sec
     double max_vel_vert_abs;
+    double max_yaw_rate_degree;
 
     DynamicConstraints():
         max_vel_horz_abs(1.0),
-        max_vel_vert_abs(0.5)
+        max_vel_vert_abs(0.5),
+        max_yaw_rate_degree(10.0)
         {}
 
     bool load_from_rosparams(const ros::NodeHandle& nh);

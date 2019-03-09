@@ -140,7 +140,8 @@ void AirsimROSWrapper::vel_cmd_body_frame_cb(const airsim_ros_pkgs::VelCmd &msg)
     vel_cmd_.drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
     // vel_cmd_.yaw_mode = msr::airlib::YawMode(true, msg.twist.angular.z);
     vel_cmd_.yaw_mode.is_rate = true;
-    vel_cmd_.yaw_mode.yaw_or_rate = msg.twist.angular.z;
+    // airsim uses degrees
+    vel_cmd_.yaw_mode.yaw_or_rate = math_common::rad2deg(msg.twist.angular.z);
     vel_cmd_.vehicle_name = msg.vehicle_name;
     has_vel_cmd_ = true;
 }
@@ -153,7 +154,7 @@ void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg
     vel_cmd_.drivetrain = msr::airlib::DrivetrainType::MaxDegreeOfFreedom;
     // vel_cmd_.yaw_mode = msr::airlib::YawMode(true, msg.twist.angular.z);
     vel_cmd_.yaw_mode.is_rate = true;
-    vel_cmd_.yaw_mode.yaw_or_rate = msg.twist.angular.z;
+    vel_cmd_.yaw_mode.yaw_or_rate = math_common::rad2deg(msg.twist.angular.z);
     vel_cmd_.vehicle_name = msg.vehicle_name;
     has_vel_cmd_ = true;
 }
@@ -216,9 +217,9 @@ sensor_msgs::Imu AirsimROSWrapper::get_ground_truth_imu_msg_from_airsim_state(co
     // imu_msg.orientation_covariance = ;
 
     // todo radians per second
-    imu_msg.angular_velocity.x = drone_state.kinematics_estimated.twist.angular.x();
-    imu_msg.angular_velocity.y = drone_state.kinematics_estimated.twist.angular.y();
-    imu_msg.angular_velocity.z = drone_state.kinematics_estimated.twist.angular.z();
+    imu_msg.angular_velocity.x = math_common::deg2rad(drone_state.kinematics_estimated.twist.angular.x());
+    imu_msg.angular_velocity.y = math_common::deg2rad(drone_state.kinematics_estimated.twist.angular.y());
+    imu_msg.angular_velocity.z = math_common::deg2rad(drone_state.kinematics_estimated.twist.angular.z());
 
     // imu_msg.angular_velocity_covariance = ;
 
