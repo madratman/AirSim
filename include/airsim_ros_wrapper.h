@@ -187,6 +187,7 @@ private:
     image_transport::Publisher front_left_img_raw_pub_;
     image_transport::Publisher front_right_img_raw_pub_;
     image_transport::Publisher front_left_depth_planar_pub_;
+    image_transport::Publisher front_center_img_raw_pub_;
     ros::Publisher front_left_cam_info_pub_;
     ros::Publisher front_right_cam_info_pub_;
 

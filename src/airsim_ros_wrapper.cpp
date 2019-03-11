@@ -46,6 +46,7 @@ void AirsimROSWrapper::initialize_ros()
     double update_airsim_img_response_every_n_sec;// = 0.0001;
     double update_airsim_control_every_n_sec;// = 0.01;
 
+    front_center_img_raw_pub_ = it_.advertise("front_center/image_raw", 1);
     front_left_img_raw_pub_ = it_.advertise("front/left/image_raw", 1);
     front_right_img_raw_pub_ = it_.advertise("front/right/image_raw", 1);
     front_left_depth_planar_pub_ = it_.advertise("front/left/depth_planar", 1);
@@ -340,7 +341,8 @@ void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
     std::vector<ImageRequest> img_request = { 
         ImageRequest("front_left", ImageType::Scene,false, false), 
         ImageRequest("front_right", ImageType::Scene, false, false), 
-        ImageRequest("front_left", ImageType::DepthPlanner, true)
+        ImageRequest("front_left", ImageType::DepthPlanner, true),
+        ImageRequest("front_center", ImageType::Scene, false, false)
     };
 
     try
@@ -414,12 +416,16 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     cv::Mat front_left_depth_planar = manual_decode_depth(img_response.at(2));
     sensor_msgs::ImagePtr front_left_depth_planar_msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", front_left_depth_planar).toImageMsg();
 
+    cv::Mat bgr_front_center = manual_decode_rgb(img_response.at(3));
+    sensor_msgs::ImagePtr bgr_front_center_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_center).toImageMsg();
+
     // put ros time now in headers. 
     // TODO use airsim time if ros param /use_sim_time is set to true
     ros::Time curr_ros_time = ros::Time::now();
     bgr_front_left_msg->header.stamp = curr_ros_time;
     bgr_front_right_msg->header.stamp = curr_ros_time;
     front_left_depth_planar_msg->header.stamp = curr_ros_time;
+    bgr_front_center_msg->header.stamp = curr_ros_time;
     front_left_cam_info_msg_.header.stamp = curr_ros_time; // update timestamp of saved cam info msgs
     front_right_cam_info_msg_.header.stamp = curr_ros_time;
 
@@ -430,9 +436,11 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // todo make topic name a param. this should be same as calib/*.yamls, or else the point cloud can't be viewed in rviz.
     publish_camera_tf(img_response.at(0), tf_header, "airsim/front/left");
     publish_camera_tf(img_response.at(1), tf_header, "airsim/front/right");
+    publish_camera_tf(img_response.at(3), tf_header, "airsim/front_center");
 
     // publish everything
     front_right_img_raw_pub_.publish(bgr_front_right_msg);
+    front_center_img_raw_pub_.publish(bgr_front_center_msg);
     front_left_img_raw_pub_.publish(bgr_front_left_msg);
     front_left_depth_planar_pub_.publish(front_left_depth_planar_msg);
     front_left_cam_info_pub_.publish(front_left_cam_info_msg_);
