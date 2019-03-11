@@ -9,7 +9,8 @@ For internal use, don't use this in open source version as of now
 ##  Build
 - Build AirSim 
 ```
-cd $(AIRSIM_ROOT);
+git clone https://github.com/Microsoft/AirSim.git
+cd $(AIRSIM_ROOT); # path to the folder where AirSim was cloned in previous step
 ./setup.sh;
 ./build.sh;
 cd $(AIRSIM_ROOT)/Unity;
@@ -33,6 +34,10 @@ catkin_make # or catkin build
 - Open Ubuntu 16.04 session, and enter `$ DISPLAY=:0 terminator -u`. 
 
 ## Running
+
+- Copy `airsim_ros_pkgs/settings.json` to `Documents/AirSim/settings.json`. 
+
+- Build ROS package
 ```
 cd airsim_ros_ws
 source devel/setup.bash
@@ -45,7 +50,10 @@ rviz -d rviz/default.rviz
 - Read stereo_image_proc's [documentation](https://wiki.ros.org/stereo_image_proc)
 - Improve disparity/depth: [Choose good stereo params](https://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters)
 
-# ROS API
+# Using AirSim ROS wrapper
+This ROS wrapper is composed of two ROS nodes - the first is a wrapper over AirSim's multirotor C++ client library, and the second is a simple PD position controller.    
+Let's look at the ROS API for both nodes: 
+
 ## AirSim ROS Wrapper Node
 ### Publishers:
 - `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
@@ -53,23 +61,23 @@ rviz -d rviz/default.rviz
 - `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
 - `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
 Odometry in NED frame wrt take-off point 
-- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)
+- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)    
 - `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 - `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
 - `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 - `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
-- `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html):   
- Ground truth depth from left camera's focal plane from AirSim.  
+- `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
+ Ground truth depth from left camera's focal plane from AirSim. 
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
 ### Subscribers:
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
   Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
-- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
   Requested gimbal orientationangle for front-center monocular camera as quaternion, in world frame.  
-- `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)
+- `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
-- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)
+- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 
 ### Services:
@@ -118,13 +126,13 @@ Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
 ### Services:
 - `/airsim_node/gps_goal` [Request: [msgs/airsim_ros_pkgs/GPSYaw](msgs/airsim_ros_pkgs/GPSYaw)]   
   Target gps position + yaw. In absolute altitude
-- `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)
+- `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)   
   Target local position + yaw
 
 ### Subscribers:
 - `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
   Listens to home geo coordinates published by `airsim_node`.  
-- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)
+- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
   Listens to odometry published by `airsim_node`
 
 ### Publishers:
@@ -174,7 +182,3 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
         "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
       }
 	```
-
-
-## Changing camera lens configuration 
-- Not supported yet
