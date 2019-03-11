@@ -99,10 +99,49 @@ rviz -d rviz/default.rviz
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
 
 
-# AirSim camera settings 
-## Changing camera resolution
+## AirSim camera settings 
+### Changing camera parameters 
+- Frame of reference
+The camera positions are defined in a **left-handed coordinate frame** as shown in the image below. +X-axis is along "body front", +Y-axis is along "body right", +Z axis is along "body up" direction.  
+![](docs/images/unreal_m210_origin.png)
 
-## Changing stereo baseline 
+- Stereo   
+[This page](https://support.stereolabs.com/hc/en-us/articles/360007395634-What-is-the-camera-focal-length-and-field-of-view-) enlists the possible resolutions, and corresponding focal lengths and field of views.   
+You can change the default stereo pair pose, image resolution, and _horizontal_ FoV under the "front-left" and "front-right" fields in `Documents\AirSim\Settings.json`. The default parameters are according the `WVGA` settings as [detailed here](https://support.stereolabs.com/hc/en-us/articles/360007395634-What-is-the-camera-focal-length-and-field-of-view-).   
+More details on AirSim's settings is [available here](https://microsoft.github.io/AirSim/docs/settings/).   
+Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence we have `-0.06` and `0.06` in Y axis of front_left and front_right):
+  * for front-left:
+  	```
+      "front-left": {
+        "CaptureSettings": [
+          {
+            "ImageType": 0,
+            "Width": 672,
+            "Height": 376,
+            "FOV_Degrees": 87
+          }
+        ],
+        "X": 0.25, "Y": -0.06, "Z": 0.0,
+        "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+      },
+	```
+
+  * for front-right:
+  	```
+      "front-right": {
+        "CaptureSettings": [
+          {
+            "ImageType": 0,
+            "Width": 672,
+            "Height": 376,
+            "FOV_Degrees": 87
+          }
+        ],
+        "X": 0.25, "Y": 0.06, "Z": 0.0,
+        "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+      }
+	```
+
 
 ## Changing camera lens configuration 
 - Not supported yet
