@@ -103,7 +103,7 @@ rviz -d rviz/default.rviz
 ### Changing camera parameters 
 - Frame of reference
 The camera positions are defined in a **left-handed coordinate frame** as shown in the image below. +X-axis is along "body front", +Y-axis is along "body right", +Z axis is along "body up" direction.  
-![](docs/images/unreal_m210_origin.png)
+![](docs/images/unreal_m210_origin.PNG)
 
 - Stereo   
 [This page](https://support.stereolabs.com/hc/en-us/articles/360007395634-What-is-the-camera-focal-length-and-field-of-view-) enlists the possible resolutions, and corresponding focal lengths and field of views.   
