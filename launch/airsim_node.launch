@@ -10,17 +10,11 @@
     <param name="update_airsim_control_every_n_sec" type="double" value="0.01" />
 
     <!-- Camera calibration -->
-    <!-- todo add relative path -->
-    <!-- ubuntu -->
-    <!-- <param name="front_left_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left_720x1080.yaml" /> -->
-    <!-- <param name="front_right_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right_720x1080.yaml" /> -->
-    <!-- <param name="front_left_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_left_480x640.yaml" /> -->
-    <!-- <param name="front_right_calib_file" type="string" value="/home/madratman/projects/airsim_roscpp_ws/src/airsim_roscpp_pkgs/calib/front_right_480x640.yaml" /> -->
-    <!-- windows -->
-    <!-- <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left_720x1080.yaml" /> -->
-    <!-- <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right_720x1080.yaml" /> -->
-    <param name="front_left_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_left_480x640.yaml" />
-    <param name="front_right_calib_file" type="string" value="/mnt/c/Users/ramadaan/projects/AirSim_wsl/airsim_roscpp_ws/src/airsim_ros_pkgs/calib/front_right_480x640.yaml" />
+    <!-- Note don't forget to make corresponding changes in Documents/AirSim/settings.json  -->
+    <!-- <param name="front_left_calib_file" type="string" value="$(find airsim_ros_pkgs)/calib/front_left_480x640.yaml" /> -->
+    <!-- <param name="front_right_calib_file" type="string" value="$(find airsim_ros_pkgs)/calib/front_right_480x640.yaml" /> -->
+    <param name="front_left_calib_file" type="string" value="$(find airsim_ros_pkgs)/calib/front_left_376x672.yaml" />
+    <param name="front_right_calib_file" type="string" value="$(find airsim_ros_pkgs)/calib/front_right_376x672.yaml" />
 
 </node>
 

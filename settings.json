@@ -1,0 +1,67 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/master/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockSpeed": 1.0,
+  "SubWindows": [
+  {"WindowID": 0, "ImageType": 0, "CameraName": "front-left", "Visible": true},
+  {"WindowID": 1, "ImageType": 0, "CameraName": "front-center", "Visible": true},
+  {"WindowID": 2, "ImageType": 0, "CameraName": "front-right", "Visible": true}
+  ],
+  "Vehicles": {
+    "SimpleFlight": {
+      "VehicleType": "SimpleFlight",
+      "DefaultVehicleState": "Armed",
+      "EnableCollisionPassthrogh": false,
+      "EnableCollisions": true,
+      "AllowAPIAlways": true,
+      "RC": {
+        "RemoteControlID": 0,
+        "AllowAPIWhenDisconnected": false
+      },
+      "Cameras": {
+        "front-center": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 1320,
+              "Height": 989,
+              "FOV_Degrees": 27,
+              "DepthOfFieldFstop": 2.8,
+              "DepthOfFieldFocalDistance": 3000.0, 
+              "DepthOfFieldFocalRegion": 2000.0
+            }
+          ],
+          "X": 0.25, "Y": 0, "Z": 0.10,
+          "Pitch": 0, "Roll": 0, "Yaw": 0
+        },
+        "front-left": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 672,
+              "Height": 376,
+              "FOV_Degrees": 90
+            }
+          ],
+          "X": 0.25, "Y": -0.06, "Z": 0.10,
+          "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+        },
+        "front-right": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 672,
+              "Height": 376,
+              "FOV_Degrees": 90
+            }
+          ],
+          "X": 0.25, "Y": 0.06, "Z": 0.10,
+          "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+        }
+      },
+      "X": 0, "Y": 0, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 0
+    }
+  }
+}

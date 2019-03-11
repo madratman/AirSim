@@ -121,7 +121,7 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
             "FOV_Degrees": 87
           }
         ],
-        "X": 0.25, "Y": -0.06, "Z": 0.0,
+        "X": 0.25, "Y": -0.06, "Z": 0.10,
         "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
       },
 	```
@@ -137,7 +137,7 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
             "FOV_Degrees": 87
           }
         ],
-        "X": 0.25, "Y": 0.06, "Z": 0.0,
+        "X": 0.25, "Y": 0.06, "Z": 0.10,
         "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
       }
 	```
