@@ -27,12 +27,16 @@
               "Width": 1320,
               "Height": 989,
               "FOV_Degrees": 27,
+              "AutoExposureSpeed": 100,
+              "AutoExposureBias": 0,
+              "AutoExposureMaxBrightness": 0.0,
+              "AutoExposureMinBrightness": 2.0,
               "DepthOfFieldFstop": 2.8,
-              "DepthOfFieldFocalDistance": 3000.0, 
-              "DepthOfFieldFocalRegion": 2000.0
+              "DepthOfFieldFocalDistance": 200.0, 
+              "DepthOfFieldFocalRegion": 200.0
             }
           ],
-          "X": 0.25, "Y": 0, "Z": 0.10,
+          "X": 0.50, "Y": 0, "Z": 0.10,
           "Pitch": 0, "Roll": 0, "Yaw": 0
         },
         "front-left": {
@@ -44,7 +48,7 @@
               "FOV_Degrees": 90
             }
           ],
-          "X": 0.25, "Y": -0.06, "Z": 0.10,
+          "X": 0.50, "Y": -0.06, "Z": 0.10,
           "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
         },
         "front-right": {
@@ -56,7 +60,7 @@
               "FOV_Degrees": 90
             }
           ],
-          "X": 0.25, "Y": 0.06, "Z": 0.10,
+          "X": 0.50, "Y": 0.06, "Z": 0.10,
           "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
         }
       },

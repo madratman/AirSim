@@ -155,8 +155,6 @@ private:
     airsim_ros_pkgs::GPSYaw home_geo_point_msg_; // todo duplicate
 
     bool in_air_; // todo not really used 
-    double max_horz_vel_;
-    double max_vert_vel_;
 
     /// vehiclecontrol commands (received from last callback)
     // todo make a struct for control cmd, perhaps line with airlib's API 

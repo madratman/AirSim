@@ -51,8 +51,8 @@ void AirsimROSWrapper::initialize_ros()
     front_left_depth_planar_pub_ = it_.advertise("front/left/depth_planar", 1);
 
     // todo enforce dynamics constraints in this node as well?
-    nh_.getParam("max_vert_vel_", max_vert_vel_);
-    nh_.getParam("max_horz_vel", max_horz_vel_);
+    // nh_.getParam("max_vert_vel_", max_vert_vel_);
+    // nh_.getParam("max_horz_vel", max_horz_vel_);
 
     nh_private_.getParam("front_left_calib_file", front_left_calib_file_);
     nh_private_.getParam("front_right_calib_file", front_right_calib_file_);

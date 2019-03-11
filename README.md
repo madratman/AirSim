@@ -48,55 +48,88 @@ rviz -d rviz/default.rviz
 # ROS API
 ## AirSim ROS Wrapper Node
 ### Publishers:
-- `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html) -- TODO: description
-- `/home_geo_point` [airsim_ros_pkgs/GPSYaw]() -- TODO: description
-- `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html) -- TODO: description
-- `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html) -- TODO: description
-- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html) -- TODO: description
-- `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html) -- TODO: description
-- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
-- `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html) -- TODO: description
-- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
-- `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html) -- TODO: description
-- `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html) -- TODO: description
+- `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
+- `/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)
+- `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
+- `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
+Odometry in NED frame wrt take-off point 
+- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)
+- `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
+- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+- `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
+- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+- `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html):   
+ Ground truth depth from left camera's focal plane from AirSim.  
+- `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
 ### Subscribers:
-- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd] -- TODO: description
-- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd] -- TODO: description
-- `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
-- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
+- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
+  Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)
+  Requested gimbal orientationangle for front-center monocular camera as quaternion, in world frame.  
+- `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)
+  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)
+  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 
 ### Services:
-- `/land` [TODO: type] -- TODO: description
-- `/reset` [TODO: type] -- TODO: description
-- `/takeoff` [TODO: type] -- TODO: description
+- `/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 
 ### Parameters:
-- `/front_left_calib_file` [string] -- Default: `airsim_ros_pkgs/calib/front_left_480x640.yaml`
-- `/front_right_calib_file` [string] -- Default: `airsim_ros_pkgs/calib/front_right_480x640.yaml`
-- `/update_airsim_control_every_n_sec` [double] -- TODO: description
-- `/update_airsim_img_response_every_n_sec` [double] -- TODO: description
-- `/max_horz_vel` [double] -- TODO: description
-- `/max_vert_vel_` [double] -- TODO: description
+- `/front_left_calib_file` [string]   
+Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
+- `/front_right_calib_file` [string]    
+ Default: `airsim_ros_pkgs/calib/front_right_376x672.yaml`
+- `/update_airsim_control_every_n_sec` [double]   
+  Default: 0.01 seconds.    
+  Timer callback frequency for updating drone odom and state from airsim, and sending in control commands.    
+  The current RPClib interface to unreal engine maxes out at 50 Hz.   
+  Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
+- `/update_airsim_img_response_every_n_sec` [double]   
+  Default: 0.01 seconds.    
+  Timer callback frequency for receiving images from all cameras in airsim.    
+  The speed will depend on number of images requested and their resolution.   
+  Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
 
 ## Simple PID Position Controller Node 
 
 ### Parameters:
-- `/max_vel_horz_abs` [double] -- TODO: description
-- `/max_vel_vert_abs` [double] -- TODO: description
-- `/kp_x` [double] -- TODO: description
-- `/update_control_every_n_sec` [TODO: type] -- TODO: description
+- `/max_vel_horz_abs` [double]   
+  Maximum horizontal velocity of the drone (meters/second)
+
+- `/max_vel_vert_abs` [double]   
+  Maximum vertical velocity of the drone (meters/second)
+
+- PD controller parameters:
+  * `/kp_x` [double], `/kp_y` [double], `/kp_z` [double, `/kp_yaw` [double]   
+    Proportional gain
+  * `/kd_x` [double], `/kd_y` [double], `/kd_z` [double, `/kd_yaw` [double]   
+    Derivative gain
+  * `reached_thresh_xyz` [double]   
+    Threshold euler distance from current position to setpoint position 
+  * `reached_yaw_degrees` [double]   
+    Threshold yaw distance, in degrees from current position to setpoint position 
+
+- `/update_control_every_n_sec` [double]
+  Default: 0.01 seconds
 
 ### Services:
-- `/airsim_node/gps_goal` [Request: airsim_ros_pkgs/GPSYaw] -- TODO: description
-- `/airsim_node/local_position_goal` [Request: airsim_ros_pkgs/XYZYaw] -- TODO: description
+- `/airsim_node/gps_goal` [Request: [msgs/airsim_ros_pkgs/GPSYaw](msgs/airsim_ros_pkgs/GPSYaw)]   
+  Target gps position + yaw. In absolute altitude
+- `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)
+  Target local position + yaw
 
 ### Subscribers:
-- `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw] -- TODO: description
-- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html) -- TODO: description
+- `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
+  Listens to home geo coordinates published by `airsim_node`.  
+- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)
+  Listens to odometry published by `airsim_node`
 
 ### Publishers:
-- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd] -- TODO: description
+- `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](airsim_ros_pkgs/VelCmd)   
+  Sends velocity command to `airsim_node`
 
 
 ## AirSim camera settings 
