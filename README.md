@@ -182,3 +182,9 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
         "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
       }
 	```
+
+
+## Documentation
+- Markdown (with images) to html and pdf
+   - `$ pip install grip`
+   - `$ grip your_markdown.md --export your_markdown.html` 

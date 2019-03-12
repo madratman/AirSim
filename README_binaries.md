@@ -27,16 +27,23 @@
     `$ source airsim_release_ws/install/setup.bash`
     - Run the launch file:   
     `$ roslaunch airsim_ros_pkgs airsim_with_simple_PID_position_controller.launch`
-    - View the roslaunch, msg, srv, rviz, camera calibration files:   
+    - View the launch, msg, srv, rviz, camera calibration files:   
     `$ roscd airsim_ros_pkgs`   
     - Rviz:
     `$ roslaunch airsim_ros_pkgs rviz.launch`
+    The default config file is in `airsim_ros_pkgs/rviz/default.rviz`.     
+    For using a custom config, you can do a `$ roslaunch airsim_ros_pkgs rviz.launch PATH_TO_RVIZ_FILE`
 
     -  Compute disparity using stereo_image_proc
         * `ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc`
         * View disparity `rosrun image_view stereo_view stereo:=/front image:=image_rect_color`
         * Read stereo_image_proc's [documentation](https://wiki.ros.org/stereo_image_proc)
         * Improve disparity/depth: [Choose good stereo params](https://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters)
+
+## Tips for the Unreal binary
+- Pressing `TAB` shows|hides the blade configuration menu. 
+- Press `F1` for AirSim's camera control options. 
+  * Here, manual mode, which can be toggled by pressing `M` at any time should be useful to control the unreal viewport camera. Please see how to control to   
 
 ## ROS API
 This ROS wrapper is composed of two ROS nodes - the first is a wrapper over AirSim's multirotor C++ client library, and the second is a simple PD position controller.    
@@ -45,6 +52,10 @@ The ROS parameters can be easily changed in the launch files:
   - `dynamic_constraints.launch`
   - `position_controller_simple.launch`
   - `airsim_with_simple_PID_position_controller.launch`
+
+**Note**: 
+- Please ignore `vehicle_name` field in any rosmsg/srv. Right now, we don't need it as we're focusing on one drone only. But later, the `vehicle_name` field would help us scale to multiple drones. 
+- In control messages (velocity set points, gimbal set points), the header of the msg can be ignored.  
 
 Let's look at the ROS API for both nodes: 
 
@@ -67,6 +78,17 @@ Odometry in NED frame wrt take-off point
 #### Subscribers:
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
   Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
+  Example:
+  ``` rostopic pub /gimbal_angle_euler_cmd airsim_ros_pkgs/GimbalAngleEulerCmd "header:
+      seq: 0                    
+      stamp: {secs: 0, nsecs: 0}
+      frame_id: ''
+      camera_name: 'front_right'
+      vehicle_name: ''
+      roll: 10.0
+      pitch: 0.0
+      yaw: 0.0" 
+  ```
 - `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
   Requested gimbal orientationangle for front-center monocular camera as quaternion, in world frame.  
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    

@@ -160,6 +160,7 @@ void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg
     has_vel_cmd_ = true;
 }
 
+// todo support multiple gimbal commands
 void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg)
 {
     // airsim uses wxyz
@@ -170,10 +171,11 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
     has_gimbal_cmd_ = true; 
 }
 
+// todo support multiple gimbal commands
 void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg)
 {
     // airsim uses wxyz
-    tf2::Quaternion tf2_quat(gimbal_angle_euler_cmd_msg.yaw, gimbal_angle_euler_cmd_msg.pitch, gimbal_angle_euler_cmd_msg.roll);
+    tf2::Quaternion tf2_quat(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
     gimbal_cmd_.target_quat = get_airlib_quat(tf2_quat);
     gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
     gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
@@ -280,6 +282,7 @@ mavros_msgs::State AirsimROSWrapper::get_vehicle_state_msg(msr::airlib::Multirot
     return vehicle_state_msg;
 }
 
+// todo unused
 void AirsimROSWrapper::set_zero_vel_cmd()
 {
     vel_cmd_.x = 0.0;
