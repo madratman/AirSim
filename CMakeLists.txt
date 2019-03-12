@@ -116,10 +116,9 @@ install(TARGETS
 
 install(FILES 
   #list of necessary files (xml...)
-  # launch/airsim_node.launch
-  # launch/dynamic_constraints.launch
-  # launch/position_controller_simple.launch
-  # launch/airsim_with_simple_PID_position_controller.launch
+  README_binaries.md
+  README_binaries.html
+  settings.json
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

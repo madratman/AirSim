@@ -1,39 +1,55 @@
 # airsim_roscpp_pkgs
 
 ##  Setup 
-- Ubuntu 16.04 + ROS Kinetic. WSL works fine as well
- * Deps: `$ sudo apt-get install ros-kinetic-mavros-msgs`
+- Windows 10 machine + [Windows Subsytem for Linux (Ubuntu 16.04)](https://www.microsoft.com/en-us/p/ubuntu-1604-lts)
+  * Get [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+  * Get [Ubuntu 16.04](https://www.microsoft.com/en-us/p/ubuntu-1604-lts/9pjn388hp8c9?activetab=pivot:overviewtab) distro  
+  * Install ROS Kinetic
+  * Deps: `$ sudo apt-get install ros-kinetic-mavros-msgs`
 
 
-- Setup for Windows Subsystem for Linux for running RViz, rqt_image_view, terminator 
-* Install [Xming X Server](https://sourceforge.net/projects/xming/). 
-* Run "XLaunch" from Windows start menu. Select `Multiple Windows` in first popup, `Start no client` in second, **ONLY** `Clipboard` in third popup. Do not select `Native Opengl`.  
-* Install terminator : `sudo apt-get install terminator` for tabs and panes.  
-* Open Ubuntu 16.04 session, and enter `$ DISPLAY=:0 terminator -u`. 
+- Setup for running RViz, rqt_image_view, terminator in Windows + WSL
+  * Install [Xming X Server](https://sourceforge.net/projects/xming/). 
+  * Find and run `XLaunch` from the Windows start menu.   
+  Select `Multiple Windows` in first popup, `Start no client` in second popup, **only** `Clipboard` in third popup. Do **not** select `Native Opengl`.  
+  * Open Ubuntu 16.04 session by typing `Ubuntu 16.04` in Windows start menu.  
+  * Recommended: Install [terminator](http://www.ubuntugeek.com/terminator-multiple-gnome-terminals-in-one-window.html) : `$ sudo apt-get install terminator.` 
+    - You can open terminator in a new window by entering `$ DISPLAY=:0 terminator -u`. 
 
 ## Running
-- Make folder: `C:\Users\USERNAME\Documents\AirSim`
-- Copy provided `settings.json` to `Documents/AirSim/settings.json`. 
-- Run unreal binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
-- Source ros install workspace   
-`$ source airsim_release_ws/install/setup.bash`
-- Run the launch file:
-`roslaunch airsim_ros_pkgs airsim_with_simple_PID_position_controller.launch`
+- Running the unreal project:
+  * Make a folder: `C:\Users\{USERNAME}\Documents\AirSim`
+  * Copy provided `settings.json` in release's root folder to `Documents/AirSim/settings.json`. 
+  * Go inside the `WindTurbineBinary` directory.   
+   Run unreal project binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
+ * ROS wrapper   
+    - Source the binary workspace   
+    `$ source airsim_release_ws/install/setup.bash`
+    - Run the launch file:   
+    `$ roslaunch airsim_ros_pkgs airsim_with_simple_PID_position_controller.launch`
+    - View the roslaunch, msg, srv, rviz, camera calibration files:   
+    `$ roscd airsim_ros_pkgs`   
+    - Rviz:
+    `$ roslaunch airsim_ros_pkgs rviz.launch`
 
-`rviz -d rviz/default.rviz`
+    -  Compute disparity using stereo_image_proc
+        * `ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc`
+        * View disparity `rosrun image_view stereo_view stereo:=/front image:=image_rect_color`
+        * Read stereo_image_proc's [documentation](https://wiki.ros.org/stereo_image_proc)
+        * Improve disparity/depth: [Choose good stereo params](https://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters)
 
--  Compute disparity using stereo_image_proc
-* `ROS_NAMESPACE=front rosrun stereo_image_proc stereo_image_proc`
-* View disparity `rosrun image_view stereo_view stereo:=/front image:=image_rect_color`
-* Read stereo_image_proc's [documentation](https://wiki.ros.org/stereo_image_proc)
-* Improve disparity/depth: [Choose good stereo params](https://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters)
-
-# ROS API
+## ROS API
 This ROS wrapper is composed of two ROS nodes - the first is a wrapper over AirSim's multirotor C++ client library, and the second is a simple PD position controller.    
+The ROS parameters can be easily changed in the launch files:
+  - `airsim_node.launch`
+  - `dynamic_constraints.launch`
+  - `position_controller_simple.launch`
+  - `airsim_with_simple_PID_position_controller.launch`
+
 Let's look at the ROS API for both nodes: 
 
-## AirSim ROS Wrapper Node
-### Publishers:
+### AirSim ROS Wrapper Node
+#### Publishers:
 - `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
 - `/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)
 - `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
@@ -48,7 +64,7 @@ Odometry in NED frame wrt take-off point
  Ground truth depth from left camera's focal plane from AirSim. 
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
-### Subscribers:
+#### Subscribers:
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
   Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
 - `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
@@ -58,12 +74,12 @@ Odometry in NED frame wrt take-off point
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 
-### Services:
+#### Services:
 - `/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 - `/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 - `/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 
-### Parameters:
+#### Parameters:
 - `/front_left_calib_file` [string]   
 Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
 - `/front_right_calib_file` [string]    
@@ -79,15 +95,9 @@ Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
   The speed will depend on number of images requested and their resolution.   
   Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
 
-## Simple PID Position Controller Node 
+### Simple PID Position Controller Node 
 
-### Parameters:
-- `/max_vel_horz_abs` [double]   
-  Maximum horizontal velocity of the drone (meters/second)
-
-- `/max_vel_vert_abs` [double]   
-  Maximum vertical velocity of the drone (meters/second)
-
+#### Parameters:
 - PD controller parameters:
   * `/kp_x` [double], `/kp_y` [double], `/kp_z` [double, `/kp_yaw` [double]   
     Proportional gain
@@ -101,21 +111,29 @@ Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
 - `/update_control_every_n_sec` [double]
   Default: 0.01 seconds
 
-### Services:
+#### Services:
 - `/airsim_node/gps_goal` [Request: [msgs/airsim_ros_pkgs/GPSYaw](msgs/airsim_ros_pkgs/GPSYaw)]   
   Target gps position + yaw. In absolute altitude
 - `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)   
   Target local position + yaw
 
-### Subscribers:
+#### Subscribers:
 - `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
   Listens to home geo coordinates published by `airsim_node`.  
 - `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
   Listens to odometry published by `airsim_node`
 
-### Publishers:
+#### Publishers:
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](airsim_ros_pkgs/VelCmd)   
   Sends velocity command to `airsim_node`
+
+### Global params
+- Dynamic constraints. These can be changed in `dynamic_constraints.launch`:  
+    * `/max_vel_horz_abs` [double]   
+    Maximum horizontal velocity of the drone (meters/second)
+
+    * `/max_vel_vert_abs` [double]   
+      Maximum vertical velocity of the drone (meters/second)
 
 
 ## AirSim camera settings 
