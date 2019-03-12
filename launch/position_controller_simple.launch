@@ -1,6 +1,6 @@
 <launch>
 
-<!-- global -->
+<!-- global params -->
     <param name="kp_x" type="double" value="0.30" />
     <param name="kp_y" type="double" value="0.30" />
     <param name="kp_z" type="double" value="0.30" />
