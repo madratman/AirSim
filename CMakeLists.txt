@@ -84,12 +84,12 @@ link_directories(${AIRSIM_ROOT}/llvm-build/lib)
 link_directories(${AIRSIM_ROOT}/Unity/linux-build)
 
 add_library(lib_airsim_ros_wrapper src/airsim_ros_wrapper.cpp)
-add_library(lib_path_tracking_control src/path_tracking_control.cpp)
+# add_library(lib_path_tracking_control src/path_tracking_control.cpp)
 add_library(lib_pid_position_controller_simple src/pid_position_controller_simple.cpp)
 
 # add_dependencies(lib_airsim_ros_wrapper ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lib_path_tracking_control ${catkin_LIBRARIES})
-target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper ${OpenCV_LIBS} yaml-cpp lib_path_tracking_control)
+# target_link_libraries(lib_path_tracking_control ${catkin_LIBRARIES})
+target_link_libraries(lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper ${OpenCV_LIBS} yaml-cpp)
 
 add_executable(airsim_node src/airsim_node.cpp)
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
@@ -98,3 +98,37 @@ target_link_libraries(airsim_node lib_airsim_ros_wrapper ${catkin_LIBRARIES} Air
 # add_dependencies(airsim_node ${catkin_EXPORTED_TARGETS})
 add_executable(pid_position_controller_simple_node src/pid_position_controller_simple_node.cpp)
 target_link_libraries(pid_position_controller_simple_node lib_pid_position_controller_simple lib_airsim_ros_wrapper ${catkin_LIBRARIES} AirsimWrapper)
+
+install(TARGETS
+    #list of nodes
+    airsim_node
+    pid_position_controller_simple_node
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS 
+    #list of shared libraries
+    lib_airsim_ros_wrapper
+    lib_pid_position_controller_simple
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(FILES 
+  #list of necessary files (xml...)
+  # launch/airsim_node.launch
+  # launch/dynamic_constraints.launch
+  # launch/position_controller_simple.launch
+  # launch/airsim_with_simple_PID_position_controller.launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# todo automate launch files, rviz copy
+install(DIRECTORY
+  launch
+  calib
+  rviz
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+  PATTERN ".git" EXCLUDE
+)
