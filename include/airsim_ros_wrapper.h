@@ -12,9 +12,6 @@ STRICT_MODE_ON
 #include "yaml-cpp/yaml.h"
 #include <airsim_ros_pkgs/GimbalAngleEulerCmd.h>
 #include <airsim_ros_pkgs/GimbalAngleQuatCmd.h>
-#include <airsim_ros_pkgs/SetGlobalPosition.h>
-#include <airsim_ros_pkgs/WaypointXYZVPsi.h>
-#include <airsim_ros_pkgs/SetLocalPosition.h>
 #include <airsim_ros_pkgs/VelCmd.h>
 #include <airsim_ros_pkgs/GPSYaw.h>
 #include <chrono>
