@@ -10,12 +10,15 @@ constexpr char AirsimROSWrapper::P_YML_NAME[];
 constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
 
 AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHandle &nh_private)
-    : nh_(nh), nh_private_(nh_private), it_(nh_)
+    : nh_(nh), nh_private_(nh_private), it_(nh_), tf_listener_(tf_buffer_)
 {
     initialize_airsim();
     initialize_ros();
     in_air_ = false;
-
+    // todo following is ugly and hardcoded
+    cam_name_to_gimbal_tf_name_map_["front_right"] = "front/right/static/gimbal";
+    cam_name_to_gimbal_tf_name_map_["front_left"] = "front/left/static/gimbal";
+    cam_name_to_gimbal_tf_name_map_["front_center"] = "front_center/static/gimbal";
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
     // gimbal_cmd_ = GimbalCmd();
@@ -163,23 +166,58 @@ void AirsimROSWrapper::vel_cmd_world_frame_cb(const airsim_ros_pkgs::VelCmd &msg
 // todo support multiple gimbal commands
 void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAngleQuatCmd &gimbal_angle_quat_cmd_msg)
 {
-    // airsim uses wxyz
-    // todo error check
-    gimbal_cmd_.target_quat = get_airlib_quat(gimbal_angle_quat_cmd_msg.orientation);
-    gimbal_cmd_.camera_name = gimbal_angle_quat_cmd_msg.camera_name;
-    gimbal_cmd_.vehicle_name = gimbal_angle_quat_cmd_msg.vehicle_name;
-    has_gimbal_cmd_ = true; 
+    tf2::Quaternion quat_world_to_gimbal;
+    tf2::Quaternion quat_control_cmd;
+    geometry_msgs::TransformStamped gimbal_orig_tf;
+    try
+    {
+        // todo what should be the root transform here?
+        // gimbal_orig_tf = tf_buffer_.lookupTransform("world_view", cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], ros::Time::now(), ros::Duration(0.1));
+        gimbal_orig_tf = tf_buffer_.lookupTransform("world", cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], ros::Time(0));
+        tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
+        tf2::convert(gimbal_angle_quat_cmd_msg.orientation, quat_control_cmd);
+        tf2::Quaternion quat_control_cmd_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
+        // airsim uses wxyz
+        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_ned_frame);
+        gimbal_cmd_.camera_name = gimbal_angle_quat_cmd_msg.camera_name;
+        gimbal_cmd_.vehicle_name = gimbal_angle_quat_cmd_msg.vehicle_name;
+        has_gimbal_cmd_ = true; 
+    }
+    catch (tf2::TransformException &ex)
+    {
+        ROS_WARN("%s",ex.what());
+        // ros::Duration(0.001).sleep();
+    }
 }
 
 // todo support multiple gimbal commands
+// todo make transforms name class members and ros params. make an unordered map
+// 1. find quaternion of default gimbal pose
+// 2. forward multiply with quaternion equivalent to desired euler commands (in degrees)
+// 3. call airsim client's setcameraorientation which sets camera orientation wrt world (or takeoff?) ned frame. todo 
 void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg)
 {
-    // airsim uses wxyz
-    tf2::Quaternion tf2_quat(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
-    gimbal_cmd_.target_quat = get_airlib_quat(tf2_quat);
-    gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
-    gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
-    has_gimbal_cmd_ = true; 
+    tf2::Quaternion quat_world_to_gimbal;
+    geometry_msgs::TransformStamped gimbal_orig_tf;
+    try
+    {
+        // todo what should be the root transform here?
+        // gimbal_orig_tf = tf_buffer_.lookupTransform("world_view", cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], ros::Time::now(), ros::Duration(0.1));
+        gimbal_orig_tf = tf_buffer_.lookupTransform("world", cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], ros::Time(0));
+        tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
+        // airsim uses wxyz
+        tf2::Quaternion quat_control_cmd(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
+        tf2::Quaternion quat_control_cmd_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
+        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_ned_frame);
+        gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
+        gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
+        has_gimbal_cmd_ = true; 
+    }
+    catch (tf2::TransformException &ex)
+    {
+        ROS_WARN("%s",ex.what());
+        // ros::Duration(0.001).sleep();
+    }
 }
 
 // todo to pass param and fill, or return value. 

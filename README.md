@@ -185,6 +185,9 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
 
 
 ## Documentation
-- Markdown (with images) to html and pdf
-   - `$ pip install grip`
-   - `$ grip your_markdown.md --export your_markdown.html` 
+- Install [grip](https://github.com/joeyespo/grip)   
+  `$ pip install grip`
+- Export to HTML:   
+  `$ grip README.md --export README.html` 
+- Render markdown in browser for realtime editing:    
+  `$ grip --user README.md` 

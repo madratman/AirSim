@@ -36,7 +36,10 @@ STRICT_MODE_ON
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <math_common.h>
+#include <unordered_map>
 
 // todo move airlib typedefs to separate header file?
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
@@ -165,7 +168,11 @@ private:
     GimbalCmd gimbal_cmd_; 
 
     /// ROS tf
+    /// todo is having listener and broadcaster together a bad idea? 
     tf2_ros::TransformBroadcaster tf_broadcaster_;
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
+    std::unordered_map<std::string, std::string> cam_name_to_gimbal_tf_name_map_;
 
     /// ROS params
     double vel_cmd_duration_;

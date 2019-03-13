@@ -95,19 +95,23 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        turbine/base:
+        airsim/front/left:
           Value: true
-        turbine/blade_1:
+        airsim/front/right:
           Value: true
-        turbine/blade_2:
-          Value: false
-        turbine/blade_3:
-          Value: false
-        turbine/cab:
+        airsim/front_center:
           Value: true
-        turbine/hub:
+        airsim/odom_local_ned:
+          Value: true
+        front/left/static/gimbal:
+          Value: true
+        front/right/static/gimbal:
+          Value: true
+        front_center/static/gimbal:
           Value: true
         world:
+          Value: false
+        world_view:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -116,17 +120,20 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          turbine/base:
+          airsim/front/left:
             {}
-          turbine/blade_1:
+          airsim/front/right:
             {}
-          turbine/blade_2:
+          airsim/front_center:
             {}
-          turbine/blade_3:
-            {}
-          turbine/cab:
-            {}
-          turbine/hub:
+          airsim/odom_local_ned:
+            front/left/static/gimbal:
+              {}
+            front/right/static/gimbal:
+              {}
+            front_center/static/gimbal:
+              {}
+          world_view:
             {}
       Update Interval: 0
       Value: true
@@ -134,7 +141,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: world
+    Fixed Frame: world_view
     Frame Rate: 30
   Name: root
   Tools:
@@ -155,25 +162,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.17158031
+      Distance: 2.59018135
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -2.03915334
-        Y: -3.26986217
-        Z: 1.53778481
+        X: -0.162231147
+        Y: 0.242531121
+        Z: 0.365043998
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.320398301
-      Target Frame: turbine/cab
+      Pitch: 0.425398022
+      Target Frame: world_view
       Value: Orbit (rviz)
-      Yaw: 2.471771
+      Yaw: 4.04358292
     Saved: ~
 Window Geometry:
   Displays:

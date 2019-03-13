@@ -77,7 +77,7 @@ Odometry in NED frame wrt take-off point
 
 #### Subscribers:
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
-  Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
+  Requested gimbal orientation for front-center monocular camera as euler angles (degrees), in **world** frame. 
   Example:
   ``` rostopic pub /gimbal_angle_euler_cmd airsim_ros_pkgs/GimbalAngleEulerCmd "header:
       seq: 0                    
@@ -90,7 +90,7 @@ Odometry in NED frame wrt take-off point
       yaw: 0.0" 
   ```
 - `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
-  Requested gimbal orientationangle for front-center monocular camera as quaternion, in world frame.  
+  Requested gimbal orientationangle for front-center monocular camera as quaternion, , in **world** frame.
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
