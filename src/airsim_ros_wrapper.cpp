@@ -22,6 +22,7 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
 
     double r=M_PI/2, p=0, y=M_PI;  
     quat_world_ned_to_world.setRPY(r,p,y);
+    quat_world_ned_to_world = quat_world_ned_to_world.inverse();
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
     // gimbal_cmd_ = GimbalCmd();
@@ -175,11 +176,12 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
     try
     {
         // todo what should be the root transform here?
-        // gimbal_orig_tf = tf_buffer_.lookupTransform("world_view", cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], ros::Time::now(), ros::Duration(0.1));
-        gimbal_orig_tf = tf_buffer_.lookupTransform("world", cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], ros::Time(0));
+        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], "world_view", ros::Time(0));
+        // gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], "world", ros::Time(0));
         tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
         tf2::convert(gimbal_angle_quat_cmd_msg.orientation, quat_control_cmd);
-        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world);
+        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world);
+        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * quat_world_to_gimbal;
         quat_control_cmd_world_ned_frame.normalize();
         // airsim uses wxyz
         gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_world_ned_frame);
@@ -206,12 +208,13 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
     try
     {
         // todo what should be the root transform here?
-        // gimbal_orig_tf = tf_buffer_.lookupTransform("world_view", cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], ros::Time::now(), ros::Duration(0.1));
-        gimbal_orig_tf = tf_buffer_.lookupTransform("world", cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], ros::Time(0));
+        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], "world_view",  ros::Time(0));
+        // gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], "world", ros::Time(0));
         tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
         // airsim uses wxyz
         tf2::Quaternion quat_control_cmd(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
-        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world); 
+        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world); 
+        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
         quat_control_cmd_world_ned_frame.normalize();
         gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_world_ned_frame);
         gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
