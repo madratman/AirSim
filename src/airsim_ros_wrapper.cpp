@@ -19,6 +19,9 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     cam_name_to_gimbal_tf_name_map_["front_right"] = "front/right/static/gimbal";
     cam_name_to_gimbal_tf_name_map_["front_left"] = "front/left/static/gimbal";
     cam_name_to_gimbal_tf_name_map_["front_center"] = "front_center/static/gimbal";
+
+    double r=M_PI/2, p=0, y=M_PI;  
+    quat_world_ned_to_world.setRPY(r,p,y);
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
     // gimbal_cmd_ = GimbalCmd();
@@ -176,9 +179,10 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
         gimbal_orig_tf = tf_buffer_.lookupTransform("world", cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], ros::Time(0));
         tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
         tf2::convert(gimbal_angle_quat_cmd_msg.orientation, quat_control_cmd);
-        tf2::Quaternion quat_control_cmd_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
+        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world);
+        quat_control_cmd_world_ned_frame.normalize();
         // airsim uses wxyz
-        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_ned_frame);
+        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_world_ned_frame);
         gimbal_cmd_.camera_name = gimbal_angle_quat_cmd_msg.camera_name;
         gimbal_cmd_.vehicle_name = gimbal_angle_quat_cmd_msg.vehicle_name;
         has_gimbal_cmd_ = true; 
@@ -207,8 +211,9 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
         tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
         // airsim uses wxyz
         tf2::Quaternion quat_control_cmd(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
-        tf2::Quaternion quat_control_cmd_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
-        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_ned_frame);
+        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world); 
+        quat_control_cmd_world_ned_frame.normalize();
+        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_world_ned_frame);
         gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
         gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
         has_gimbal_cmd_ = true; 
