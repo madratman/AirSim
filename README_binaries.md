@@ -75,26 +75,14 @@ Odometry in NED frame wrt take-off point
  Ground truth depth from left camera's focal plane from AirSim. 
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
-#### Subscribers:
-- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
-  Requested gimbal orientation for front-center monocular camera as euler angles (degrees), in **world** frame. 
-  Example:
-  ``` rostopic pub /gimbal_angle_euler_cmd airsim_ros_pkgs/GimbalAngleEulerCmd "header:
-      seq: 0                    
-      stamp: {secs: 0, nsecs: 0}
-      frame_id: ''
-      camera_name: 'front_right'
-      vehicle_name: ''
-      roll: 10.0
-      pitch: 0.0
-      yaw: 0.0" 
-  ```
-- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
-  Requested gimbal orientationangle for front-center monocular camera as quaternion, , in **world** frame.
+#### Subscribers: 
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
+  gimbal set point. use `front_center`, `front_right`, or `front_left` as camera_name in msg. ignore `vehicle_name`
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)  
 
 #### Services:
 - `/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
