@@ -24,13 +24,9 @@
           "CaptureSettings": [
             {
               "ImageType": 0,
-              "Width": 1320,
-              "Height": 989,
+              "Width": 640,
+              "Height": 480,
               "FOV_Degrees": 27,
-              "AutoExposureSpeed": 100,
-              "AutoExposureBias": 0,
-              "AutoExposureMaxBrightness": 0.0,
-              "AutoExposureMinBrightness": 2.0,
               "DepthOfFieldFstop": 2.8,
               "DepthOfFieldFocalDistance": 200.0, 
               "DepthOfFieldFocalRegion": 200.0

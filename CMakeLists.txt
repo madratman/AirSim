@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.11.0)
 project(airsim_ros_pkgs)
 
-set(AIRSIM_ROOT /projectsym/AirSim_wsl/AirSim)
-# set(AIRSIM_ROOT /home/madratman/projects/AirSim)
+#set(AIRSIM_ROOT /projectsym/AirSim_wsl/AirSim)
+set(AIRSIM_ROOT /home/madratman/projects/AirSim)
 # set(CMAKE_CXX_COMPILER /usr/bin/clang++-5.0)
 # set(CMAKE_CXX_COMPILER /usr/bin/g++)
 
