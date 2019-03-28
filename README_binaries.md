@@ -61,19 +61,43 @@ Let's look at the ROS API for both nodes:
 
 ### AirSim ROS Wrapper Node
 #### Publishers:
-- `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
-- `/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)
-- `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
-- `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
+- `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
+GPS coordinates corresponding to home/spawn point of the drone. These are set in the airsim's settings.json file. Please see here for `settings.json`'s [documentation](https://microsoft.github.io/AirSim/docs/settings/. 
+Which is located at `C:\Users\USERNAME\Documents\AirSim\settings.json` if you're using Windows, or in `/home/USERNAME/Documents/AirSim/settings.json` if on Ubuntu. 
+The defaults are:
+```
+ "OriginGeopoint": {
+    "Latitude": 47.641468,
+    "Longitude": -122.140165,
+    "Altitude": 122
+  }
+```
+	
+- `/airsim_node/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
+This the current GPS coordinates of the drone in airsim. 
+
+- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
 Odometry in NED frame wrt take-off point 
-- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)    
+
+- `/airsim_node/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)
+  Currently, the drone is always `armed`. Hence, there is only one state. 
+
+- `/airsim_node/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)   
+Not published yet
+ 
 - `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
+
 - `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+
 - `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
+
 - `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+
 - `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
  Ground truth depth from left camera's focal plane from AirSim. 
+
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
+
 
 #### Subscribers: 
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
@@ -85,21 +109,27 @@ Odometry in NED frame wrt take-off point
 - `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)  
 
 #### Services:
-- `/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
-- `/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
-- `/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/airsim_node/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/airsim_node/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/airsim_node/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 
 #### Parameters:
-- `/front_left_calib_file` [string]   
-Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
-- `/front_right_calib_file` [string]    
- Default: `airsim_ros_pkgs/calib/front_right_376x672.yaml`
-- `/update_airsim_control_every_n_sec` [double]   
+- `/airsim_node/front_left_calib_file` [string]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
+  Default: `$(airsim_ros_pkgs)/calib/front_left_376x672.yaml`. 
+
+- `/airsim_node/front_right_calib_file` [string]    
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
+  Default: `airsim_ros_pkgs/calib/front_right_376x672.yaml`
+
+- `/airsim_node/update_airsim_control_every_n_sec` [double]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
   Default: 0.01 seconds.    
   Timer callback frequency for updating drone odom and state from airsim, and sending in control commands.    
   The current RPClib interface to unreal engine maxes out at 50 Hz.   
   Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
-- `/update_airsim_img_response_every_n_sec` [double]   
+- `/airsim_node/update_airsim_img_response_every_n_sec` [double]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
   Default: 0.01 seconds.    
   Timer callback frequency for receiving images from all cameras in airsim.    
   The speed will depend on number of images requested and their resolution.   
