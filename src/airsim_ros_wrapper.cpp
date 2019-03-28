@@ -21,8 +21,8 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     cam_name_to_gimbal_tf_name_map_["front_center"] = "front_center/static/gimbal";
 
     double r=M_PI/2, p=0, y=M_PI;  
-    quat_world_ned_to_world.setRPY(r,p,y);
-    quat_world_ned_to_world = quat_world_ned_to_world.inverse();
+    quat_world_ned_to_world_enu.setRPY(r,p,y);
+    // quat_world_ned_to_world_enu = quat_world_ned_to_world_enu.inverse();
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
     // gimbal_cmd_ = GimbalCmd();
@@ -176,11 +176,11 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
     try
     {
         // todo what should be the root transform here?
-        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], "world_view", ros::Time(0));
+        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], "world_enu", ros::Time(0));
         // gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_quat_cmd_msg.camera_name], "world", ros::Time(0));
         tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
         tf2::convert(gimbal_angle_quat_cmd_msg.orientation, quat_control_cmd);
-        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world);
+        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world_enu);
         tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * quat_world_to_gimbal;
         quat_control_cmd_world_ned_frame.normalize();
         // airsim uses wxyz
@@ -203,18 +203,18 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
 // 3. call airsim client's setcameraorientation which sets camera orientation wrt world (or takeoff?) ned frame. todo 
 void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd &gimbal_angle_euler_cmd_msg)
 {
-    tf2::Quaternion quat_world_to_gimbal;
+    tf2::Quaternion quat_world_enu_to_gimbal;
     geometry_msgs::TransformStamped gimbal_orig_tf;
     try
     {
         // todo what should be the root transform here?
-        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], "world_view",  ros::Time(0));
-        // gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], "world", ros::Time(0));
-        tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_to_gimbal);
+        gimbal_orig_tf = tf_buffer_.lookupTransform(cam_name_to_gimbal_tf_name_map_[gimbal_angle_euler_cmd_msg.camera_name], "world_enu",  ros::Time(0));
+        tf2::convert(gimbal_orig_tf.transform.rotation, quat_world_enu_to_gimbal);
         // airsim uses wxyz
-        tf2::Quaternion quat_control_cmd(math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll));
-        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_to_gimbal * quat_world_ned_to_world); 
-        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * quat_world_to_gimbal; 
+        tf2::Quaternion quat_control_cmd;
+        quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll), math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch), math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw));
+        // tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * (quat_world_enu_to_gimbal * quat_world_ned_to_world_enu); 
+        tf2::Quaternion quat_control_cmd_world_ned_frame = quat_control_cmd * quat_world_enu_to_gimbal; 
         quat_control_cmd_world_ned_frame.normalize();
         gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd_world_ned_frame);
         gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
@@ -353,7 +353,7 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
 
     // convert airsim drone state to ROS msgs
     curr_odom_ned_ = get_odom_msg_from_airsim_state(curr_drone_state_);
-    curr_odom_ned_.header.frame_id = "world";
+    curr_odom_ned_.header.frame_id = "world_ned";
     curr_odom_ned_.header.stamp = curr_ros_time;
 
     sensor_msgs::NavSatFix gps_sensor_msg = get_gps_sensor_msg_from_airsim_geo_point(curr_drone_state_.gps_location);
@@ -481,7 +481,8 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // publish camera transforms
     std_msgs::Header tf_header;
     tf_header.stamp = curr_ros_time;
-    tf_header.frame_id = "world";
+    tf_header.frame_id = "world_ned"; // camera poses are obtained from airsim's client API which are in (local) NED frame 
+    // parent frame_id should be a param in publish_camera_tf()
     // todo make topic name a param. this should be same as calib/*.yamls, or else the point cloud can't be viewed in rviz.
     publish_camera_tf(img_response.at(0), tf_header, "airsim/front/left");
     publish_camera_tf(img_response.at(1), tf_header, "airsim/front/right");

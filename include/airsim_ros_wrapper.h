@@ -145,7 +145,7 @@ public:
     sensor_msgs::Imu get_ground_truth_imu_msg_from_airsim_state(const msr::airlib::MultirotorState &drone_state);
 
 private:
-    tf2::Quaternion quat_world_ned_to_world;// for gimbal commands
+    tf2::Quaternion quat_world_ned_to_world_enu;// for gimbal commands
 
     msr::airlib::MultirotorRpcLibClient airsim_client_;
     msr::airlib::MultirotorState curr_drone_state_;
