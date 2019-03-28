@@ -164,13 +164,13 @@ Odometry in NED frame wrt take-off point
     `/pid_position_node/kd_yaw` [double]   
     Derivative gains
 
-  * `reached_thresh_xyz` [double]   
+  * `/pid_position_node/reached_thresh_xyz` [double]   
     Threshold euler distance (meters) from current position to setpoint position 
 
-  * `reached_yaw_degrees` [double]   
+  * `/pid_position_node/reached_yaw_degrees` [double]   
     Threshold yaw distance (degrees) from current position to setpoint position 
 
-- `/update_control_every_n_sec` [double]   
+- `/pid_position_node/update_control_every_n_sec` [double]   
   Default: 0.01 seconds
 
 #### Services:
