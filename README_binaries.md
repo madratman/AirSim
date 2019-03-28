@@ -83,33 +83,36 @@ Odometry in NED frame wrt take-off point
   Currently, the drone is always `armed`. Hence, there is only one state. 
 
 - `/airsim_node/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)   
-Not published yet
+  Not published yet
  
 - `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 
 - `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
-RGB image corresponding to front stereo pair's left camera.
+  RGB image corresponding to front stereo pair's left camera.
 
 - `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 
 - `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
-RGB image corresponding to front stereo pair's left camera.
+  RGB image corresponding to front stereo pair's left camera.
 
 - `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
- Ground truth depth from left camera's focal plane from AirSim. 
+  Ground truth depth from left camera's focal plane from AirSim. 
 
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
 
 #### Subscribers: 
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
-  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+  Ignore `vehicle_name` field, leave it to blank. We will use `vehicle_name` in future for multiple drones.
+
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
-  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+  Ignore `vehicle_name` field, leave it to blank. We will use `vehicle_name` in future for multiple drones.
+
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
   Gimbal set point in euler angles.    
   Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
   Ignore `vehicle_name`.
+
 - `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)   
   Gimbal set point in quaternion.    
   Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
@@ -117,7 +120,9 @@ RGB image corresponding to front stereo pair's left camera.
 
 #### Services:
 - `/airsim_node/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+
 - `/airsim_node/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+
 - `/airsim_node/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
 
 #### Parameters:
@@ -147,27 +152,39 @@ RGB image corresponding to front stereo pair's left camera.
 
 #### Parameters:
 - PD controller parameters:
-  * `/kp_x` [double], `/kp_y` [double], `/kp_z` [double, `/kp_yaw` [double]   
-    Proportional gain
-  * `/kd_x` [double], `/kd_y` [double], `/kd_z` [double, `/kd_yaw` [double]   
-    Derivative gain
-  * `reached_thresh_xyz` [double]   
-    Threshold euler distance from current position to setpoint position 
-  * `reached_yaw_degrees` [double]   
-    Threshold yaw distance, in degrees from current position to setpoint position 
+  * `/pid_position_node/kd_x` [double],   
+    `/pid_position_node/kp_y` [double],   
+    `/pid_position_node/kp_z` [double],   
+    `/pid_position_node/kp_yaw` [double]   
+    Proportional gains
 
-- `/update_control_every_n_sec` [double]
+  * `/pid_position_node/kd_x` [double],   
+    `/pid_position_node/kd_y` [double],   
+    `/pid_position_node/kd_z` [double],   
+    `/pid_position_node/kd_yaw` [double]   
+    Derivative gains
+
+  * `reached_thresh_xyz` [double]   
+    Threshold euler distance (meters) from current position to setpoint position 
+
+  * `reached_yaw_degrees` [double]   
+    Threshold yaw distance (degrees) from current position to setpoint position 
+
+- `/update_control_every_n_sec` [double]   
   Default: 0.01 seconds
 
 #### Services:
 - `/airsim_node/gps_goal` [Request: [msgs/airsim_ros_pkgs/GPSYaw](msgs/airsim_ros_pkgs/GPSYaw)]   
-  Target gps position + yaw. In absolute altitude
+  Target gps position + yaw.   
+  In **absolute** altitude. 
+
 - `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)   
-  Target local position + yaw
+  Target local position + yaw in NED frame.   
 
 #### Subscribers:
 - `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
   Listens to home geo coordinates published by `airsim_node`.  
+
 - `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
   Listens to odometry published by `airsim_node`
 
@@ -178,11 +195,13 @@ RGB image corresponding to front stereo pair's left camera.
 ### Global params
 - Dynamic constraints. These can be changed in `dynamic_constraints.launch`:  
     * `/max_vel_horz_abs` [double]   
-    Maximum horizontal velocity of the drone (meters/second)
+	Maximum horizontal velocity of the drone (meters/second)
 
     * `/max_vel_vert_abs` [double]   
-      Maximum vertical velocity of the drone (meters/second)
-
+	Maximum vertical velocity of the drone (meters/second)
+    
+    * `/max_yaw_rate_degree` [double]   
+	Maximum yaw rate (degrees/second)
 
 ## AirSim camera settings 
 ### Changing camera parameters 
