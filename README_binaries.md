@@ -62,8 +62,8 @@ Let's look at the ROS API for both nodes:
 ### AirSim ROS Wrapper Node
 #### Publishers:
 - `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
-GPS coordinates corresponding to home/spawn point of the drone. These are set in the airsim's settings.json file. Please see here for `settings.json`'s [documentation](https://microsoft.github.io/AirSim/docs/settings/. 
-Which is located at `C:\Users\USERNAME\Documents\AirSim\settings.json` if you're using Windows, or in `/home/USERNAME/Documents/AirSim/settings.json` if on Ubuntu. 
+GPS coordinates corresponding to home/spawn point of the drone. These are set in the airsim's settings.json file. Please see here for `settings.json`'s [documentation](https://microsoft.github.io/AirSim/docs/settings/). 
+
 The defaults are:
 ```
  "OriginGeopoint": {
@@ -73,13 +73,13 @@ The defaults are:
   }
 ```
 	
-- `/airsim_node/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
+- `/airsim_node/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)   
 This the current GPS coordinates of the drone in airsim. 
 
 - `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
 Odometry in NED frame wrt take-off point 
 
-- `/airsim_node/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)
+- `/airsim_node/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)   
   Currently, the drone is always `armed`. Hence, there is only one state. 
 
 - `/airsim_node/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)   
@@ -87,11 +87,13 @@ Not published yet
  
 - `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 
-- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
+RGB image corresponding to front stereo pair's left camera.
 
 - `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
 
-- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
+RGB image corresponding to front stereo pair's left camera.
 
 - `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
  Ground truth depth from left camera's focal plane from AirSim. 
@@ -105,8 +107,13 @@ Not published yet
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
   Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
 - `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
-  gimbal set point. use `front_center`, `front_right`, or `front_left` as camera_name in msg. ignore `vehicle_name`
-- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)  
+  Gimbal set point in euler angles.    
+  Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
+  Ignore `vehicle_name`.
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)   
+  Gimbal set point in quaternion.    
+  Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
+  Ignore `vehicle_name`.
 
 #### Services:
 - `/airsim_node/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
@@ -128,6 +135,7 @@ Not published yet
   Timer callback frequency for updating drone odom and state from airsim, and sending in control commands.    
   The current RPClib interface to unreal engine maxes out at 50 Hz.   
   Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
+
 - `/airsim_node/update_airsim_img_response_every_n_sec` [double]   
   Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
   Default: 0.01 seconds.    
