@@ -104,15 +104,15 @@ Visualization Manager:
         airsim/odom_local_ned:
           Value: true
         front/left/static/gimbal:
-          Value: true
-        front/right/static/gimbal:
-          Value: true
-        front_center/static/gimbal:
-          Value: true
-        world_enu:
-          Value: true
-        world_ned:
           Value: false
+        front/right/static/gimbal:
+          Value: false
+        front_center/static/gimbal:
+          Value: false
+        world_enu:
+          Value: false
+        world_ned:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -177,10 +177,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.425398022
+      Pitch: 0.755398273
       Target Frame: world_view
       Value: Orbit (rviz)
-      Yaw: 4.04358292
+      Yaw: 2.79858279
     Saved: ~
 Window Geometry:
   Displays:
