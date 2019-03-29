@@ -54,90 +54,149 @@ rviz -d rviz/default.rviz
 This ROS wrapper is composed of two ROS nodes - the first is a wrapper over AirSim's multirotor C++ client library, and the second is a simple PD position controller.    
 Let's look at the ROS API for both nodes: 
 
-## AirSim ROS Wrapper Node
-### Publishers:
-- `/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)
-- `/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)
-- `/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)
-- `/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
+### AirSim ROS Wrapper Node
+#### Publishers:
+- `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
+GPS coordinates corresponding to home/spawn point of the drone. These are set in the airsim's settings.json file. Please see here for `settings.json`'s [documentation](https://microsoft.github.io/AirSim/docs/settings/). 
+
+The defaults are:
+```
+ "OriginGeopoint": {
+    "Latitude": 47.641468,
+    "Longitude": -122.140165,
+    "Altitude": 122
+  }
+```
+  
+- `/airsim_node/global_gps` [sensor_msgs/NavSatFix](https://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html)   
+This the current GPS coordinates of the drone in airsim. 
+
+- `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
 Odometry in NED frame wrt take-off point 
-- `/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)    
+
+- `/airsim_node/vehicle_state` [mavros_msgs/State](https://docs.ros.org/api/mavros_msgs/html/msg/State.html)   
+  Currently, the drone is always `armed`. Hence, there is only one state. 
+
+- `/airsim_node/imu_ground_truth` [sensor_msgs/Imu](https://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)   
+  Not published yet
+ 
 - `/front/left/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
-- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+
+- `/front/left/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
+  RGB image corresponding to front stereo pair's left camera.
+
 - `/front/right/camera_info` [sensor_msgs/CameraInfo](https://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html)
-- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)
+
+- `/front/right/image_raw` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
+  RGB image corresponding to front stereo pair's left camera.
+
 - `/front/left/depth_planar` [sensor_msgs/Image](https://docs.ros.org/api/sensor_msgs/html/msg/Image.html)   
- Ground truth depth from left camera's focal plane from AirSim. 
+  Ground truth depth from left camera's focal plane from AirSim. 
+
 - `/tf` [tf2_msgs/TFMessage](https://docs.ros.org/api/tf2_msgs/html/msg/TFMessage.html)
 
-### Subscribers:
-- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
-  Requested gimbal orientation for front-center monocular camera as euler angles, in world frame. 
-- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)    
-  Requested gimbal orientationangle for front-center monocular camera as quaternion, in world frame.  
+
+#### Subscribers: 
 - `/vel_cmd_body_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
-  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+  Ignore `vehicle_name` field, leave it to blank. We will use `vehicle_name` in future for multiple drones.
+
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](msg/VelCmd.msg)    
-  Ignore `vehicle_name` field, leave it to blank. We can use `vehicle_name` in future for multiple drones.
+  Ignore `vehicle_name` field, leave it to blank. We will use `vehicle_name` in future for multiple drones.
 
-### Services:
-- `/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
-- `/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
-- `/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+- `/gimbal_angle_euler_cmd` [airsim_ros_pkgs/GimbalAngleEulerCmd](msg/GimbalAngleEulerCmd.msg)   
+  Gimbal set point in euler angles.    
+  Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
+  Ignore `vehicle_name`.
 
-### Parameters:
-- `/front_left_calib_file` [string]   
-Default: `airsim_ros_pkgs/calib/front_left_376x672.yaml`
-- `/front_right_calib_file` [string]    
- Default: `airsim_ros_pkgs/calib/front_right_376x672.yaml`
-- `/update_airsim_control_every_n_sec` [double]   
+- `/gimbal_angle_quat_cmd` [airsim_ros_pkgs/GimbalAngleQuatCmd](msg/GimbalAngleQuatCmd.msg)   
+  Gimbal set point in quaternion.    
+  Use `front_center`, `front_right`, or `front_left` as `camera_name` parameter in the message field.    
+  Ignore `vehicle_name`.
+
+#### Services:
+- `/airsim_node/land` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+
+- `/airsim_node/reset` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+
+- `/airsim_node/takeoff` [std_srvs/Empty](https://docs.ros.org/api/std_srvs/html/srv/Empty.html)
+
+#### Parameters:
+- `/airsim_node/front_left_calib_file` [string]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
+  Default: `$(airsim_ros_pkgs)/calib/front_left_376x672.yaml`. 
+
+- `/airsim_node/front_right_calib_file` [string]    
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
+  Default: `airsim_ros_pkgs/calib/front_right_376x672.yaml`
+
+- `/airsim_node/update_airsim_control_every_n_sec` [double]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
   Default: 0.01 seconds.    
   Timer callback frequency for updating drone odom and state from airsim, and sending in control commands.    
   The current RPClib interface to unreal engine maxes out at 50 Hz.   
   Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
-- `/update_airsim_img_response_every_n_sec` [double]   
+
+- `/airsim_node/update_airsim_img_response_every_n_sec` [double]   
+  Set in: `$(airsim_ros_pkgs)/launch/airsim_node.launch`   
   Default: 0.01 seconds.    
   Timer callback frequency for receiving images from all cameras in airsim.    
   The speed will depend on number of images requested and their resolution.   
   Timer callbacks in ROS run at maximum rate possible, so it's best to not touch this parameter. 
 
-## Simple PID Position Controller Node 
+### Simple PID Position Controller Node 
 
-### Parameters:
-- `/max_vel_horz_abs` [double]   
-  Maximum horizontal velocity of the drone (meters/second)
-
-- `/max_vel_vert_abs` [double]   
-  Maximum vertical velocity of the drone (meters/second)
-
+#### Parameters:
 - PD controller parameters:
-  * `/kp_x` [double], `/kp_y` [double], `/kp_z` [double, `/kp_yaw` [double]   
-    Proportional gain
-  * `/kd_x` [double], `/kd_y` [double], `/kd_z` [double, `/kd_yaw` [double]   
-    Derivative gain
-  * `reached_thresh_xyz` [double]   
-    Threshold euler distance from current position to setpoint position 
-  * `reached_yaw_degrees` [double]   
-    Threshold yaw distance, in degrees from current position to setpoint position 
+  * `/pid_position_node/kd_x` [double],   
+    `/pid_position_node/kp_y` [double],   
+    `/pid_position_node/kp_z` [double],   
+    `/pid_position_node/kp_yaw` [double]   
+    Proportional gains
 
-- `/update_control_every_n_sec` [double]
+  * `/pid_position_node/kd_x` [double],   
+    `/pid_position_node/kd_y` [double],   
+    `/pid_position_node/kd_z` [double],   
+    `/pid_position_node/kd_yaw` [double]   
+    Derivative gains
+
+  * `/pid_position_node/reached_thresh_xyz` [double]   
+    Threshold euler distance (meters) from current position to setpoint position 
+
+  * `/pid_position_node/reached_yaw_degrees` [double]   
+    Threshold yaw distance (degrees) from current position to setpoint position 
+
+- `/pid_position_node/update_control_every_n_sec` [double]   
   Default: 0.01 seconds
 
-### Services:
+#### Services:
 - `/airsim_node/gps_goal` [Request: [msgs/airsim_ros_pkgs/GPSYaw](msgs/airsim_ros_pkgs/GPSYaw)]   
-  Target gps position + yaw. In absolute altitude
-- `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)   
-  Target local position + yaw
+  Target gps position + yaw.   
+  In **absolute** altitude. 
 
-### Subscribers:
+- `/airsim_node/local_position_goal` [Request: [msgs/airsim_ros_pkgs/XYZYaw](msgs/airsim_ros_pkgs/XYZYaw)   
+  Target local position + yaw in NED frame.   
+
+#### Subscribers:
 - `/airsim_node/home_geo_point` [airsim_ros_pkgs/GPSYaw](msg/GPSYaw.msg)   
   Listens to home geo coordinates published by `airsim_node`.  
+
 - `/airsim_node/odom_local_ned` [nav_msgs/Odometry](https://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)   
   Listens to odometry published by `airsim_node`
 
-### Publishers:
+#### Publishers:
 - `/vel_cmd_world_frame` [airsim_ros_pkgs/VelCmd](airsim_ros_pkgs/VelCmd)   
   Sends velocity command to `airsim_node`
+
+### Global params
+- Dynamic constraints. These can be changed in `dynamic_constraints.launch`:  
+    * `/max_vel_horz_abs` [double]   
+  Maximum horizontal velocity of the drone (meters/second)
+
+    * `/max_vel_vert_abs` [double]   
+  Maximum vertical velocity of the drone (meters/second)
+    
+    * `/max_yaw_rate_degree` [double]   
+  Maximum yaw rate (degrees/second)
 
 
 ## AirSim camera settings 
@@ -188,6 +247,14 @@ Defaults are (X,Y,Z are in **meters**. ZED's baseline is 12 centimeters, hence w
 - Install [grip](https://github.com/joeyespo/grip)   
   `$ pip install grip`
 - Export to HTML:   
-  `$ grip README.md --export README.html` 
+  `$ grip README_binaries.md --export README.html` 
 - Render markdown in browser for realtime editing:    
   `$ grip --user README.md` 
+
+## Generating install binaries
+- Generate HTML doc for end user   
+`$ grip README_binaries.md --export README.html` 
+- Generate catkin binaries   
+`$ catkin_make install`
+- Copy libAirsimwrapper   
+`cp $(AIRSIM_ROOT)/Unity/linux-build/libAirsimWrapper.so /PATH_TO/airsim_roscpp_ws/install/lib/`

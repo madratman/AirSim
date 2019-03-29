@@ -13,7 +13,7 @@ Panels:
         - /Axes5
         - /TF1
         - /TF1/Frames1
-      Splitter Ratio: 0.5
+      Splitter Ratio: 0.729411781
     Tree Height: 739
   - Class: rviz/Selection
     Name: Selection
@@ -109,17 +109,17 @@ Visualization Manager:
           Value: true
         front_center/static/gimbal:
           Value: true
-        world:
-          Value: false
-        world_view:
+        world_enu:
           Value: true
+        world_ned:
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
+        world_ned:
           airsim/front/left:
             {}
           airsim/front/right:
@@ -133,7 +133,7 @@ Visualization Manager:
               {}
             front_center/static/gimbal:
               {}
-          world_view:
+          world_enu:
             {}
       Update Interval: 0
       Value: true
@@ -141,7 +141,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: world_view
+    Fixed Frame: world_enu
     Frame Rate: 30
   Name: root
   Tools:
@@ -162,7 +162,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.59018135
+      Distance: 4.07570076
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
