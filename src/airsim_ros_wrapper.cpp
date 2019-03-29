@@ -20,6 +20,10 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     cam_name_to_gimbal_tf_name_map_["front_left"] = "front/left/static/gimbal";
     cam_name_to_gimbal_tf_name_map_["front_center"] = "front_center/static/gimbal";
 
+    cam_name_to_cam_tf_name_map_["front_right"] = "front/right";
+    cam_name_to_cam_tf_name_map_["front_left"] = "front/left";
+    cam_name_to_cam_tf_name_map_["front_center"] = "front_center";
+
     double r=M_PI/2, p=0, y=M_PI;  
     quat_world_ned_to_world_enu.setRPY(r,p,y);
     // quat_world_ned_to_world_enu = quat_world_ned_to_world_enu.inverse();
@@ -459,21 +463,30 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // TODO use airsim time if ros param /use_sim_time is set to true
     ros::Time curr_ros_time = ros::Time::now();
     bgr_front_left_msg->header.stamp = curr_ros_time;
+    bgr_front_left_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"];
+
     bgr_front_right_msg->header.stamp = curr_ros_time;
+    bgr_front_right_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_right"];
+
+    // front left depth planar ground truth has the SAME tranform as front left stereo!
     front_left_depth_planar_msg->header.stamp = curr_ros_time;
+    front_left_depth_planar_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"]; 
+
     bgr_front_center_msg->header.stamp = curr_ros_time;
-    front_left_cam_info_msg_.header.stamp = curr_ros_time; // update timestamp of saved cam info msgs
+    bgr_front_center_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_center"]; // todo same camera tf as monocular left?
+
+    // update timestamp of saved cam info msgs
+    front_left_cam_info_msg_.header.stamp = curr_ros_time; 
+    front_left_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_left"]; 
     front_right_cam_info_msg_.header.stamp = curr_ros_time;
+    front_right_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_right"];
 
     // publish camera transforms
-    std_msgs::Header tf_header;
-    tf_header.stamp = curr_ros_time;
-    tf_header.frame_id = "world_ned"; // camera poses are obtained from airsim's client API which are in (local) NED frame 
-    // parent frame_id should be a param in publish_camera_tf()
+    // camera poses are obtained from airsim's client API which are in (local) NED frame 
     // todo make topic name a param. this should be same as calib/*.yamls, or else the point cloud can't be viewed in rviz.
-    publish_camera_tf(img_response.at(0), tf_header, "airsim/front/left");
-    publish_camera_tf(img_response.at(1), tf_header, "airsim/front/right");
-    publish_camera_tf(img_response.at(3), tf_header, "airsim/front_center");
+    publish_camera_tf(img_response.at(0), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_left"]);
+    publish_camera_tf(img_response.at(1), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_right"]);
+    publish_camera_tf(img_response.at(3), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_center"]);
 
     // publish everything
     front_right_img_raw_pub_.publish(bgr_front_right_msg);
@@ -484,10 +497,11 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     front_right_cam_info_pub_.publish(front_right_cam_info_msg_);
 }
 
-void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id)
+void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const ros::Time &ros_time, const std::string &frame_id, const std::string &child_frame_id)
 {
     geometry_msgs::TransformStamped cam_tf;
-    cam_tf.header = header;
+    cam_tf.header.stamp = ros_time;
+    cam_tf.header.frame_id = frame_id;
     cam_tf.child_frame_id = child_frame_id;
     cam_tf.transform.translation.x = img_response.camera_position.x();
     cam_tf.transform.translation.y = img_response.camera_position.y();

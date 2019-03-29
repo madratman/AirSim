@@ -123,7 +123,7 @@ public:
     bool reset_srv_cb(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
     /// ROS tf broadcasters
-    void publish_camera_tf(const ImageResponse &img_response, const std_msgs::Header &header, const std::string &child_frame_id);
+    void publish_camera_tf(const ImageResponse &img_response, const ros::Time &ros_time, const std::string &frame_id, const std::string &child_frame_id);
     void publish_odom_tf(const nav_msgs::Odometry &odom_ned_msg);
 
     /// camera helper methods
@@ -175,6 +175,7 @@ private:
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
     std::unordered_map<std::string, std::string> cam_name_to_gimbal_tf_name_map_;
+    std::unordered_map<std::string, std::string> cam_name_to_cam_tf_name_map_;
 
     /// ROS params
     double vel_cmd_duration_;
