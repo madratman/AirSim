@@ -24,9 +24,18 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     cam_name_to_cam_tf_name_map_["front_left"] = "front/left";
     cam_name_to_cam_tf_name_map_["front_center"] = "front_center";
 
-    double r=M_PI/2, p=0, y=M_PI;  
-    quat_world_ned_to_world_enu.setRPY(r,p,y);
+    // todo parse into a common tf_utils 
+    // double r=M_PI/2, p=0, y=M_PI;  
+    // quat_world_ned_to_world_enu.setRPY(r,p,y);
     // quat_world_ned_to_world_enu = quat_world_ned_to_world_enu.inverse();
+
+    // https://docs.ros.org/jade/api/tf2/html/classtf2_1_1Matrix3x3.html
+    // attention: row major
+    tf2::Matrix3x3 matrix_camera_body_to_optical(0,0,1,
+                                                1,0,0,
+                                                0,1,0);
+    matrix_camera_body_to_optical.getRotation(quat_camera_body_to_optical_);
+    quat_camera_body_to_optical_.normalize();
     // intitialize placeholder control commands
     // vel_cmd_ = VelCmd();
     // gimbal_cmd_ = GimbalCmd();
@@ -460,26 +469,28 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     sensor_msgs::ImagePtr bgr_front_center_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_center).toImageMsg();
 
     // put ros time now in headers. 
-    // TODO use airsim time if ros param /use_sim_time is set to true
+    // todo comply with standards! https://wiki.ros.org/image_pipeline/FrameConventions
+    // todo https://wiki.ros.org/image_pipeline/FrameConventions is not actually valid as depth_image_proc does look at frame_id of images!
+    // todo use airsim time if ros param /use_sim_time is set to true. also what the hell is airsim time in practice and should I use it?
     ros::Time curr_ros_time = ros::Time::now();
     bgr_front_left_msg->header.stamp = curr_ros_time;
-    bgr_front_left_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"];
+    bgr_front_left_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical";
 
     bgr_front_right_msg->header.stamp = curr_ros_time;
-    bgr_front_right_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_right"];
+    bgr_front_right_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_right"] + "_optical";
 
     // front left depth planar ground truth has the SAME tranform as front left stereo!
     front_left_depth_planar_msg->header.stamp = curr_ros_time;
-    front_left_depth_planar_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"]; 
+    front_left_depth_planar_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical"; 
 
     bgr_front_center_msg->header.stamp = curr_ros_time;
-    bgr_front_center_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_center"]; // todo same camera tf as monocular left?
+    bgr_front_center_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_center"] + "_optical"; // todo same camera tf as monocular left?
 
     // update timestamp of saved cam info msgs
     front_left_cam_info_msg_.header.stamp = curr_ros_time; 
-    front_left_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_left"]; 
+    front_left_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical"; 
     front_right_cam_info_msg_.header.stamp = curr_ros_time;
-    front_right_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_right"];
+    front_right_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_right"] + "_optical";
 
     // publish camera transforms
     // camera poses are obtained from airsim's client API which are in (local) NED frame 
@@ -497,20 +508,39 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     front_right_cam_info_pub_.publish(front_right_cam_info_msg_);
 }
 
+// todo cleanup api or add good description
 void AirsimROSWrapper::publish_camera_tf(const ImageResponse &img_response, const ros::Time &ros_time, const std::string &frame_id, const std::string &child_frame_id)
 {
-    geometry_msgs::TransformStamped cam_tf;
-    cam_tf.header.stamp = ros_time;
-    cam_tf.header.frame_id = frame_id;
-    cam_tf.child_frame_id = child_frame_id;
-    cam_tf.transform.translation.x = img_response.camera_position.x();
-    cam_tf.transform.translation.y = img_response.camera_position.y();
-    cam_tf.transform.translation.z = img_response.camera_position.z();
-    cam_tf.transform.rotation.x = img_response.camera_orientation.x();
-    cam_tf.transform.rotation.y = img_response.camera_orientation.y();
-    cam_tf.transform.rotation.z = img_response.camera_orientation.z();
-    cam_tf.transform.rotation.w = img_response.camera_orientation.w();
-    tf_broadcaster_.sendTransform(cam_tf);
+    geometry_msgs::TransformStamped cam_tf_body;
+    cam_tf_body.header.stamp = ros_time;
+    cam_tf_body.header.frame_id = frame_id;
+    cam_tf_body.child_frame_id = child_frame_id;
+    cam_tf_body.transform.translation.x = img_response.camera_position.x();
+    cam_tf_body.transform.translation.y = img_response.camera_position.y();
+    cam_tf_body.transform.translation.z = img_response.camera_position.z();
+    cam_tf_body.transform.rotation.x = img_response.camera_orientation.x();
+    cam_tf_body.transform.rotation.y = img_response.camera_orientation.y();
+    cam_tf_body.transform.rotation.z = img_response.camera_orientation.z();
+    cam_tf_body.transform.rotation.w = img_response.camera_orientation.w();
+
+    geometry_msgs::TransformStamped cam_tf_optical;
+    cam_tf_optical.header.stamp = ros_time;
+    cam_tf_optical.header.frame_id = frame_id;
+    cam_tf_optical.child_frame_id = child_frame_id + "_optical";
+    cam_tf_optical.transform.translation.x = cam_tf_body.transform.translation.x;
+    cam_tf_optical.transform.translation.y = cam_tf_body.transform.translation.y;
+    cam_tf_optical.transform.translation.z = cam_tf_body.transform.translation.z;
+
+    tf2::Quaternion quat_camera_body;
+    tf2::Quaternion quat_camera_optical;
+    tf2::convert(cam_tf_body.transform.rotation, quat_camera_body);
+    quat_camera_body.normalize();
+    quat_camera_optical = quat_camera_body_to_optical_ * quat_camera_body;
+    quat_camera_optical.normalize();
+    tf2::convert(quat_camera_optical, cam_tf_optical.transform.rotation);
+
+    tf_broadcaster_.sendTransform(cam_tf_body);
+    tf_broadcaster_.sendTransform(cam_tf_optical);
 }
 
 void AirsimROSWrapper::convert_yaml_to_simple_mat(const YAML::Node& node, SimpleMatrix& m)
