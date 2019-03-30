@@ -22,13 +22,19 @@
   * Copy provided `settings.json` in release's root folder to `Documents/AirSim/settings.json`. 
   * Go inside the `WindTurbineBinary` directory.   
    Run unreal project binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
- * ROS wrapper   
+  * ROS wrapper   
     - Source the binary workspace   
     `$ source airsim_release_ws/install/setup.bash`
+
     - Run the launch file:   
     `$ roslaunch airsim_ros_pkgs airsim_with_simple_PID_position_controller.launch`
+
+    - (Optional) Run `depth_image_proc` launch file to convert airsim's ground truth depth image to a pointcloud:   
+    `$ roslaunch airsim_ros_pkgs depth_to_pointcloud.launch`
+
     - View the launch, msg, srv, rviz, camera calibration files:   
     `$ roscd airsim_ros_pkgs`   
+
     - Rviz:
     `$ roslaunch airsim_ros_pkgs rviz.launch`
     The default config file is in `airsim_ros_pkgs/rviz/default.rviz`.     
