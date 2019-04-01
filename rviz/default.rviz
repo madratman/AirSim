@@ -26,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: front_left_depth_planar_registered_point_cloud
 Visualization Manager:
   Class: ""
   Displays:
@@ -119,7 +119,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: RGB8
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -136,7 +136,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/Camera
       Enabled: false
       Image Rendering: background and overlay
@@ -148,12 +148,14 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
-        Camera: true
         Grid: true
-        PointCloud2: true
+        Odometry: true
         TF: true
         Value: true
+        cam_front_center: true
+        cam_front_left: true
+        cam_front_right: true
+        front_left_depth_planar_registered_point_cloud: true
       Zoom Factor: 1
     - Class: rviz/Camera
       Enabled: false
@@ -166,12 +168,14 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
-        Camera: true
         Grid: true
-        PointCloud2: true
+        Odometry: true
         TF: true
         Value: true
+        cam_front_center: true
+        cam_front_left_depth_planar: true
+        cam_front_right: true
+        front_left_depth_planar_registered_point_cloud: true
       Zoom Factor: 1
     - Class: rviz/Camera
       Enabled: false
@@ -184,12 +188,14 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
-        Camera: true
         Grid: true
-        PointCloud2: true
+        Odometry: true
         TF: true
         Value: true
+        cam_front_center: true
+        cam_front_left: true
+        cam_front_left_depth_planar: true
+        front_left_depth_planar_registered_point_cloud: true
       Zoom Factor: 1
     - Class: rviz/Camera
       Enabled: false
@@ -202,14 +208,14 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Visibility:
-        "": true
         Grid: true
-        PointCloud2: true
+        Odometry: true
         TF: true
         Value: true
         cam_front_left: true
         cam_front_left_depth_planar: true
         cam_front_right: true
+        front_left_depth_planar_registered_point_cloud: true
       Zoom Factor: 1
     - Angle Tolerance: 0.100000001
       Class: rviz/Odometry
@@ -270,25 +276,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.7596097
+      Distance: 11.1851768
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.62975353
-        Y: 0.360523134
-        Z: 0.769026339
+        X: 3.26785517
+        Y: 6.61116171
+        Z: -4.51031923
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.974797368
+      Pitch: 0.524797499
       Target Frame: world_view
       Value: Orbit (rviz)
-      Yaw: 3.76674223
+      Yaw: 4.22674942
     Saved: ~
 Window Geometry:
   Displays:

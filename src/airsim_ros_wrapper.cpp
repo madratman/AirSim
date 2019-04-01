@@ -16,13 +16,13 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle &nh,const ros::NodeHand
     initialize_ros();
     in_air_ = false;
     // todo following is ugly and hardcoded
-    cam_name_to_gimbal_tf_name_map_["front_right"] = "front/right/static/gimbal";
-    cam_name_to_gimbal_tf_name_map_["front_left"] = "front/left/static/gimbal";
-    cam_name_to_gimbal_tf_name_map_["front_center"] = "front_center/static/gimbal";
+    cam_name_to_gimbal_tf_name_map_["front_right_custom"] = "front/right/static/gimbal";
+    cam_name_to_gimbal_tf_name_map_["front_left_custom"] = "front/left/static/gimbal";
+    cam_name_to_gimbal_tf_name_map_["front_center_custom"] = "front_center/static/gimbal";
 
-    cam_name_to_cam_tf_name_map_["front_right"] = "front/right";
-    cam_name_to_cam_tf_name_map_["front_left"] = "front/left";
-    cam_name_to_cam_tf_name_map_["front_center"] = "front_center";
+    cam_name_to_cam_tf_name_map_["front_right_custom"] = "front/right";
+    cam_name_to_cam_tf_name_map_["front_left_custom"] = "front/left";
+    cam_name_to_cam_tf_name_map_["front_center_custom"] = "front_center";
 
     // todo parse into a common tf_utils 
     // double r=M_PI/2, p=0, y=M_PI;  
@@ -385,13 +385,14 @@ void AirsimROSWrapper::drone_state_timer_cb(const ros::TimerEvent& event)
     has_gimbal_cmd_ = false;
 }
 
+// the image request names should match the json custom camera names!
 void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
 {    
     std::vector<ImageRequest> img_request = { 
-        ImageRequest("front_left", ImageType::Scene,false, false), 
-        ImageRequest("front_right", ImageType::Scene, false, false), 
-        ImageRequest("front_left", ImageType::DepthPlanner, true),
-        ImageRequest("front_center", ImageType::Scene, false, false)
+        ImageRequest("front_left_custom", ImageType::Scene, false, false), 
+        ImageRequest("front_right_custom", ImageType::Scene, false, false), 
+        ImageRequest("front_left_custom", ImageType::DepthPlanner, true),
+        ImageRequest("front_center_custom", ImageType::Scene, false, false)
     };
 
     try
@@ -440,7 +441,7 @@ cv::Mat AirsimROSWrapper::manual_decode_depth(const ImageResponse &img_response)
 
     for (int row = 0; row < img_response.height; row++)
         for (int col = 0; col < img_width; col++)
-            mat.at<float>(row, col) = img_response.image_data_float[row*img_width + col];
+            mat.at<float>(row, col) = img_response.image_data_float[row * img_width + col];
     return mat;
 }
 
@@ -450,7 +451,6 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // #if CV_MAJOR_VERSION==3
             // cv::Mat camera_0_img = cv::imdecode(img_response.at(0).image_data_uint8, cv::IMREAD_UNCHANGED);
             // auto rgb_right = cv::imdecode(img_response.at(1).image_data_uint8, cv::IMREAD_COLOR);
-            // auto depth = cv::imdecode(img_response.at(2).image_data_uint8, cv::IMREAD_GRAYSCALE);
     // #else
     //     cv::Mat camera_0_img = cv::imdecode(img_response.at(0).image_data_uint8, CV_LOAD_IMAGE_COLOR);
     // #endif
@@ -462,6 +462,8 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     cv::Mat bgr_front_right = manual_decode_rgb(img_response.at(1));
     sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
 
+    // cv::Mat front_left_depth_planar = cv::imdecode(img_response.at(2).image_data_float, cv::IMREAD_GRAYSCALE);
+    // front_left_depth_planar.convertTo(front_left_depth_planar, CV_32FC1);
     cv::Mat front_left_depth_planar = manual_decode_depth(img_response.at(2));
     sensor_msgs::ImagePtr front_left_depth_planar_msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", front_left_depth_planar).toImageMsg();
 
@@ -474,30 +476,30 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     // todo use airsim time if ros param /use_sim_time is set to true. also what the hell is airsim time in practice and should I use it?
     ros::Time curr_ros_time = ros::Time::now();
     bgr_front_left_msg->header.stamp = curr_ros_time;
-    bgr_front_left_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical";
+    bgr_front_left_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left_custom"] + "_optical";
 
     bgr_front_right_msg->header.stamp = curr_ros_time;
-    bgr_front_right_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_right"] + "_optical";
+    bgr_front_right_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_right_custom"] + "_optical";
 
     // front left depth planar ground truth has the SAME tranform as front left stereo!
     front_left_depth_planar_msg->header.stamp = curr_ros_time;
-    front_left_depth_planar_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical"; 
+    front_left_depth_planar_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_left_custom"] + "_optical"; 
 
     bgr_front_center_msg->header.stamp = curr_ros_time;
-    bgr_front_center_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_center"] + "_optical"; // todo same camera tf as monocular left?
+    bgr_front_center_msg->header.frame_id = cam_name_to_cam_tf_name_map_["front_center_custom"] + "_optical"; // todo same camera tf as monocular left?
 
     // update timestamp of saved cam info msgs
     front_left_cam_info_msg_.header.stamp = curr_ros_time; 
-    front_left_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_left"] + "_optical"; 
+    front_left_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_left_custom"] + "_optical"; 
     front_right_cam_info_msg_.header.stamp = curr_ros_time;
-    front_right_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_right"] + "_optical";
+    front_right_cam_info_msg_.header.frame_id = cam_name_to_cam_tf_name_map_["front_right_custom"] + "_optical";
 
     // publish camera transforms
     // camera poses are obtained from airsim's client API which are in (local) NED frame 
     // todo make topic name a param. this should be same as calib/*.yamls, or else the point cloud can't be viewed in rviz.
-    publish_camera_tf(img_response.at(0), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_left"]);
-    publish_camera_tf(img_response.at(1), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_right"]);
-    publish_camera_tf(img_response.at(3), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_center"]);
+    publish_camera_tf(img_response.at(0), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_left_custom"]);
+    publish_camera_tf(img_response.at(1), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_right_custom"]);
+    publish_camera_tf(img_response.at(3), curr_ros_time, "world_ned", cam_name_to_cam_tf_name_map_["front_center_custom"]);
 
     // publish everything
     front_right_img_raw_pub_.publish(bgr_front_right_msg);
