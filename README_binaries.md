@@ -1,6 +1,7 @@
 # airsim_roscpp_pkgs
 
 ##  Setup 
+### Windows
 - Windows 10 machine + [Windows Subsytem for Linux (Ubuntu 16.04)](https://www.microsoft.com/en-us/p/ubuntu-1604-lts)
   * Get [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
   * Get [Ubuntu 16.04](https://www.microsoft.com/en-us/p/ubuntu-1604-lts/9pjn388hp8c9?activetab=pivot:overviewtab) distro  
@@ -17,12 +18,19 @@
     - You can open terminator in a new window by entering `$ DISPLAY=:0 terminator -u`. 
 
 ## Running
-- Running the unreal project:
-  * Make a folder: `C:\Users\{USERNAME}\Documents\AirSim`
-  * Copy provided `settings.json` in release's root folder to `Documents/AirSim/settings.json`. 
-  * Go inside the `WindTurbineBinary` directory.   
-   Run unreal project binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
-  * ROS wrapper   
+- AirSim settings:
+  * Make a folder:
+	- Windows: `C:\Users\{USERNAME}\Documents\AirSim` 
+	- Ubuntu: `mkdir ~/Documents/AirSim`
+  * Copy provided `settings.json` in release's root folder to `/PATH/TO/Documents/AirSim/settings.json`.
+- Unreal binary:
+  * Windows: 
+	- `cd WindTurbineBinary` directory.   
+	- Run unreal project binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
+  * Ubuntu:
+	- `./WindTurbineBinaryLinux/WindTurbineCPP.sh -windowed`
+  	- or `./WindTurbineCPP.sh -windowed -ResX=1080 -ResY=720`
+- ROS wrapper   
     - Source the binary workspace   
     `$ source airsim_release_ws/install/setup.bash`
 
