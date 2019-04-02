@@ -146,7 +146,6 @@ public:
 
 private:
     // tf2::Quaternion quat_world_ned_to_world_enu; // for gimbal commands. todo deprecated
-    tf2::Quaternion quat_camera_body_to_optical_; 
 
     msr::airlib::MultirotorRpcLibClient airsim_client_;
     msr::airlib::MultirotorState curr_drone_state_;
