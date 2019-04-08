@@ -421,6 +421,10 @@ cv::Mat AirsimROSWrapper::manual_decode_rgb(const ImageResponse &img_response)
                 img_response.image_data_uint8[row*img_width*4 + 4*col + 2],
                 img_response.image_data_uint8[row*img_width*4 + 4*col + 1],
                 img_response.image_data_uint8[row*img_width*4 + 4*col + 0]);
+        //     mat.at<cv::Vec3b>(row, col) = cv::Vec3b(
+        //         img_response.image_data_uint8[row*img_width*4 + 4*col + 0],
+        //         img_response.image_data_uint8[row*img_width*4 + 4*col + 1],
+        //         img_response.image_data_uint8[row*img_width*4 + 4*col + 2]);
         }
     }
     return mat;
@@ -449,10 +453,12 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
 
     // decode images and convert to ROS image msgs
     cv::Mat bgr_front_left = manual_decode_rgb(img_response.at(0));
-    sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_left).toImageMsg();
+    // sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_left).toImageMsg();
+    sensor_msgs::ImagePtr bgr_front_left_msg = cv_bridge::CvImage(std_msgs::Header(), "rgb8", bgr_front_left).toImageMsg();
 
     cv::Mat bgr_front_right = manual_decode_rgb(img_response.at(1));
-    sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
+    // sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_right).toImageMsg();
+    sensor_msgs::ImagePtr bgr_front_right_msg = cv_bridge::CvImage(std_msgs::Header(), "rgb8", bgr_front_right).toImageMsg();
 
     // cv::Mat front_left_depth_planar = cv::imdecode(img_response.at(2).image_data_float, cv::IMREAD_GRAYSCALE);
     // front_left_depth_planar.convertTo(front_left_depth_planar, CV_32FC1);
@@ -460,7 +466,8 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
     sensor_msgs::ImagePtr front_left_depth_planar_msg = cv_bridge::CvImage(std_msgs::Header(), "32FC1", front_left_depth_planar).toImageMsg();
 
     cv::Mat bgr_front_center = manual_decode_rgb(img_response.at(3));
-    sensor_msgs::ImagePtr bgr_front_center_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_center).toImageMsg();
+    // sensor_msgs::ImagePtr bgr_front_center_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bgr_front_center).toImageMsg();
+    sensor_msgs::ImagePtr bgr_front_center_msg = cv_bridge::CvImage(std_msgs::Header(), "rgb8", bgr_front_center).toImageMsg();
 
     // put ros time now in headers. 
     // todo comply with standards! https://wiki.ros.org/image_pipeline/FrameConventions
