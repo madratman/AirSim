@@ -22,7 +22,8 @@
   * Make a folder:
 	- Windows: `C:\Users\{USERNAME}\Documents\AirSim` 
 	- Ubuntu: `mkdir ~/Documents/AirSim`
-  * Copy provided `settings.json` in release's root folder to `/PATH/TO/Documents/AirSim/settings.json`.
+  * Copy provided `settings.json` in release's root folder to `/PATH/TO/Documents/AirSim/settings.json`.   
+  `$ cp evolve_release/settings.json ~/Documents/AirSim/settings.json`
 - Unreal binary:
   * Windows: 
 	- `cd WindTurbineBinary` directory.   
@@ -32,6 +33,10 @@
 	`$ apt install vulkan-utils`. See the above link for more options.   
 	- `./WindTurbineBinaryLinux/WindTurbineCPP.sh -windowed -vulkan`
   	- or `./WindTurbineCPP.sh -windowed -vulkan -ResX=1080 -ResY=720`
+
+- Docker notes:
+	* See `airsim_binary` instructions in [airsim fork here](https://github.com/madratman/AirSim/blob/PR/docker_ubuntu/docs/docker_ubuntu.md).    
+	The docker files and scripts mentioned in the markdown are [located here](https://github.com/madratman/AirSim/tree/PR/docker_ubuntu/docker). Note that this is currently a [PR](https://github.com/Microsoft/AirSim/pull/1877), so the links in the md point to the upstream master, and hence won't work directly.  
 	
 - ROS wrapper   
     - Source the binary workspace   
