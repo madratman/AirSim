@@ -28,8 +28,11 @@
 	- `cd WindTurbineBinary` directory.   
 	- Run unreal project binary by double clicking on either `run.bat` for full resolution, `run_720p.bat` for 720x1280, or `run_480p.bat` for 480x640.
   * Ubuntu:
-	- `./WindTurbineBinaryLinux/WindTurbineCPP.sh -windowed`
-  	- or `./WindTurbineCPP.sh -windowed -ResX=1080 -ResY=720`
+	- Install [vulkan](https://linuxconfig.org/install-and-test-vulkan-on-linux).    
+	`$ apt install vulkan-utils`. See the above link for more options.   
+	- `./WindTurbineBinaryLinux/WindTurbineCPP.sh -windowed -vulkan`
+  	- or `./WindTurbineCPP.sh -windowed -vulkan -ResX=1080 -ResY=720`
+	
 - ROS wrapper   
     - Source the binary workspace   
     `$ source airsim_release_ws/install/setup.bash`
