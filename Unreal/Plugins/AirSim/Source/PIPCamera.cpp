@@ -1,7 +1,6 @@
 #include "PIPCamera.h"
 #include "ConstructorHelpers.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "Camera/CameraComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -11,8 +10,7 @@
 #include <exception>
 #include "AirBlueprintLib.h"
 
-
-APIPCamera::APIPCamera()
+APIPCamera::APIPCamera(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     static ConstructorHelpers::FObjectFinder<UMaterial> mat_finder(TEXT("Material'/AirSim/HUDAssets/CameraSensorNoise.CameraSensorNoise'"));
     if (mat_finder.Succeeded())
@@ -30,7 +28,7 @@ void APIPCamera::PostInitializeComponents()
 {
     Super::PostInitializeComponents();
 
-    camera_ = UAirBlueprintLib::GetActorComponent<UCameraComponent>(this, TEXT("CameraComponent"));
+    camera_ = UAirBlueprintLib::GetActorComponent<UCineCameraComponent>(this, TEXT("CameraComponent"));
     captures_.Init(nullptr, imageTypeCount());
     render_targets_.Init(nullptr, imageTypeCount());
 
@@ -83,68 +81,68 @@ msr::airlib::ProjectionMatrix APIPCamera::getProjectionMatrix(const APIPCamera::
     if (capture) {
         FMatrix proj_mat;
 
-	    float x_axis_multiplier;
-	    float y_axis_multiplier;
-		FIntPoint render_target_size(capture->TextureTarget->GetSurfaceWidth(), capture->TextureTarget->GetSurfaceHeight());
+        float x_axis_multiplier;
+        float y_axis_multiplier;
+        FIntPoint render_target_size(capture->TextureTarget->GetSurfaceWidth(), capture->TextureTarget->GetSurfaceHeight());
 
-	    if (render_target_size.X > render_target_size.Y)
-	    {
-		    // if the viewport is wider than it is tall
-		    x_axis_multiplier = 1.0f;
-		    y_axis_multiplier = render_target_size.X / static_cast<float>(render_target_size.Y);
-	    }
-	    else
-	    {
-		    // if the viewport is taller than it is wide
-		    x_axis_multiplier = render_target_size.Y / static_cast<float>(render_target_size.X);
-		    y_axis_multiplier = 1.0f;
-	    }
+        if (render_target_size.X > render_target_size.Y)
+        {
+            // if the viewport is wider than it is tall
+            x_axis_multiplier = 1.0f;
+            y_axis_multiplier = render_target_size.X / static_cast<float>(render_target_size.Y);
+        }
+        else
+        {
+            // if the viewport is taller than it is wide
+            x_axis_multiplier = render_target_size.Y / static_cast<float>(render_target_size.X);
+            y_axis_multiplier = 1.0f;
+        }
 
-	    if (capture->ProjectionType == ECameraProjectionMode::Orthographic)
-	    {
-		    check((int32)ERHIZBuffer::IsInverted);
-		    const float OrthoWidth = capture->OrthoWidth / 2.0f;
-		    const float OrthoHeight = capture->OrthoWidth / 2.0f * x_axis_multiplier / y_axis_multiplier;
+        if (capture->ProjectionType == ECameraProjectionMode::Orthographic)
+        {
+            check((int32)ERHIZBuffer::IsInverted);
+            const float OrthoWidth = capture->OrthoWidth / 2.0f;
+            const float OrthoHeight = capture->OrthoWidth / 2.0f * x_axis_multiplier / y_axis_multiplier;
 
-		    const float NearPlane = 0;
-		    const float FarPlane = WORLD_MAX / 8.0f;
+            const float NearPlane = 0;
+            const float FarPlane = WORLD_MAX / 8.0f;
 
-		    const float ZScale = 1.0f / (FarPlane - NearPlane);
-		    const float ZOffset = -NearPlane;
+            const float ZScale = 1.0f / (FarPlane - NearPlane);
+            const float ZOffset = -NearPlane;
 
-		    proj_mat = FReversedZOrthoMatrix(
-			    OrthoWidth,
-			    OrthoHeight,
-			    ZScale,
-			    ZOffset
-			    );
-	    }
-	    else
-	    {
+            proj_mat = FReversedZOrthoMatrix(
+                OrthoWidth,
+                OrthoHeight,
+                ZScale,
+                ZOffset
+                );
+        }
+        else
+        {
             float fov = Utils::degreesToRadians(capture->FOVAngle);
-		    if ((int32)ERHIZBuffer::IsInverted)
-		    {
-			    proj_mat = FReversedZPerspectiveMatrix(
-				    fov,
-				    fov,
-				    x_axis_multiplier,
-				    y_axis_multiplier,
-				    GNearClippingPlane,
-				    GNearClippingPlane
-				    );
-		    }
-		    else
-		    {
-			    proj_mat = FPerspectiveMatrix(
-				    fov,
-				    fov,
-				    x_axis_multiplier,
-				    y_axis_multiplier,
-				    GNearClippingPlane,
-				    GNearClippingPlane
-				    );
-		    }
-	    }
+            if ((int32)ERHIZBuffer::IsInverted)
+            {
+                proj_mat = FReversedZPerspectiveMatrix(
+                    fov,
+                    fov,
+                    x_axis_multiplier,
+                    y_axis_multiplier,
+                    GNearClippingPlane,
+                    GNearClippingPlane
+                    );
+            }
+            else
+            {
+                proj_mat = FPerspectiveMatrix(
+                    fov,
+                    fov,
+                    x_axis_multiplier,
+                    y_axis_multiplier,
+                    GNearClippingPlane,
+                    GNearClippingPlane
+                    );
+            }
+        }
         msr::airlib::ProjectionMatrix mat;
         for (auto i = 0; i < 4; ++i)
             for (auto j = 0; j < 4; ++j)
@@ -276,33 +274,80 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
 void APIPCamera::updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
     const CaptureSetting& setting, const NedTransform& ned_transform)
 {
+    // assert that desired aspect ratio respect cine camera's sensor width and height?
+    // unreal should add black bars in viewports, but it doesn't do that in render targets.  
+    // camera_->SensorAspectRatio
     render_target->InitAutoFormat(setting.width, setting.height); //256 X 144, X 480
     if (!std::isnan(setting.target_gamma))
         render_target->TargetGamma = setting.target_gamma;
 
     capture->ProjectionType = static_cast<ECameraProjectionMode::Type>(setting.projection_mode);
 
-    if (!std::isnan(setting.fov_degrees))
-        capture->FOVAngle = setting.fov_degrees;
+    // get fov from UCineCameraComponent and map it to USceneCaptureComponent2D
+    capture->FOVAngle = camera_->GetHorizontalFieldOfView();
     if (capture->ProjectionType == ECameraProjectionMode::Orthographic && !std::isnan(setting.ortho_width))
         capture->OrthoWidth = ned_transform.fromNed(setting.ortho_width);
 
     updateCameraPostProcessingSetting(capture->PostProcessSettings, setting);
 }
 
-void APIPCamera::updateCameraSetting(UCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform)
+void APIPCamera::updateCameraSetting(UCineCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform)
 {
-    //if (!std::isnan(setting.target_gamma))
-    //    camera-> = setting.target_gamma;
-
     camera->SetProjectionMode(static_cast<ECameraProjectionMode::Type>(setting.projection_mode));
 
-    if (!std::isnan(setting.fov_degrees))
-        camera->SetFieldOfView(setting.fov_degrees);
     if (camera->ProjectionMode == ECameraProjectionMode::Orthographic && !std::isnan(setting.ortho_width))
         camera->SetOrthoWidth(ned_transform.fromNed(setting.ortho_width));
 
+    if (!setting.FilmbackPresetName.empty())
+        camera->SetFilmbackPresetByName(FString(setting.FilmbackPresetName.c_str()));
+    if (!setting.LensPresetName.empty())
+        camera->SetLensPresetByName(FString(setting.LensPresetName.c_str()));
+
+    if (!std::isnan(setting.SensorHeight))
+        camera->FilmbackSettings.SensorHeight = setting.SensorHeight;
+    if (!std::isnan(setting.SensorWidth))
+        camera->FilmbackSettings.SensorWidth = setting.SensorWidth;
+
+    // camera->LensSettings.DiaphragmBladeCount = setting.DiaphragmBladeCount; // not supported in 4.18
+    if (!std::isnan(setting.Fstop))
+    {
+        camera->LensSettings.MaxFStop = setting.Fstop;
+        camera->LensSettings.MinFStop = setting.Fstop;
+    }
+    if (!std::isnan(setting.FocalLength))
+    {
+        camera->LensSettings.MaxFocalLength = setting.FocalLength;
+        camera->LensSettings.MinFocalLength = setting.FocalLength;        
+    }
+    if (!std::isnan(setting.MinimumFocusDistance))
+        camera->LensSettings.MinimumFocusDistance = setting.MinimumFocusDistance;
+
+    if (setting.DrawDebugFocusPlane)
+        camera->FocusSettings.bDrawDebugFocusPlane = 1;
+    
+    if (setting.ConstrainAspectRatio)
+        camera->bConstrainAspectRatio = 1;
+    // todo enable for dynamic camera params API in future
+    // camera->FocusSettings.bSmoothFocusChanges = setting.bSmoothFocusChanges;
+
+    // if (setting.FocusMethod == "None")
+        // camera->FocusSettings.FocusMethod = ECameraFocusMethod::None;
+
+    // if (setting.FocusMethod == "Manual")
+        // camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual; // enum
+
+    // if (setting.FocusMethod == "Tracking")
+    //     camera->FocusSettings.FocusMethod = ECameraFocusMethod::Tracking; // enum
+
+    // camera->FocusSettings.FocusOffset = setting.FocusOffset;
+    // camera->FocusSettings.FocusSmoothingInterpSpeed = setting.FocusSmoothingInterpSpeed;
+    camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+    
+    if (!std::isnan(setting.FocusDistance))
+       camera->FocusSettings.ManualFocusDistance = setting.FocusDistance;
+
     updateCameraPostProcessingSetting(camera->PostProcessSettings, setting);
+
 }
 
 msr::airlib::Pose APIPCamera::getPose() const
@@ -361,6 +406,63 @@ void APIPCamera::updateCameraPostProcessingSetting(FPostProcessSettings& obj, co
     {
         obj.bOverride_HistogramLogMax = 1;
         obj.HistogramLogMax = setting.auto_exposure_histogram_log_max;
+    }
+    if(!std::isnan(setting.CameraShutterSpeed))
+    {
+        obj.bOverride_CameraShutterSpeed = 1;
+        obj.CameraShutterSpeed = setting.CameraShutterSpeed;
+    }        
+    if(!std::isnan(setting.CameraISO))
+    {
+        obj.bOverride_CameraISO = 1;
+        obj.CameraISO = setting.CameraISO;
+    }        
+
+    // if(!std::isnan(setting.DepthOfFieldMethod))
+    // {
+        obj.bOverride_DepthOfFieldMethod = 1;
+        // todo make a few std maps from settings.json string specs to unreal enums in a common header?
+        if (setting.DepthOfFieldMethod == "DOFM_BokehDOF")
+        {
+            obj.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_BokehDOF;
+        }
+        if (setting.DepthOfFieldMethod == "DOFM_Gaussian")
+        {
+            obj.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_Gaussian;
+        }
+        if (setting.DepthOfFieldMethod == "DOFM_CircleDOF")
+        {
+            obj.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_CircleDOF;
+        }
+        if (setting.DepthOfFieldMethod == "DOFM_MAX")
+        {
+            obj.DepthOfFieldMethod = EDepthOfFieldMethod::DOFM_MAX;
+        }
+
+    // we only allow single fstop value as of now, no range of f-stop for lenses
+    // to enable a range, we'd need to expose a zoom APi and use the cine camera component API to update uscenecameracomponent2d's postprocesssettings
+    if(!std::isnan(setting.Fstop))
+    {
+        obj.bOverride_DepthOfFieldFstop = 1;
+        obj.DepthOfFieldFstop = setting.Fstop;
+    }
+
+    // if(!std::isnan(setting.DiaphragmBladeCount))
+    // {
+        // obj.bOverride_DepthOfFieldBladeCount = true;
+        // obj.DepthOfFieldBladeCount = setting.DiaphragmBladeCount;
+    // }
+
+    // there is no FPostprocesssettings.DepthOfFieldSensorHieght, it is calculated via fov / focal length?
+    if(!std::isnan(setting.SensorWidth))
+    {
+        obj.bOverride_DepthOfFieldSensorWidth = 1;
+        obj.DepthOfFieldSensorWidth = setting.SensorWidth;
+    }
+    if(!std::isnan(setting.FocusDistance))
+    {
+        obj.bOverride_DepthOfFieldFocalDistance = 1;
+        obj.DepthOfFieldFocalDistance = setting.FocusDistance;
     }
 }
 

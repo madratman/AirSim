@@ -278,6 +278,7 @@ ModelManifest.xml
 /MavLinkCom/lib/libMavLinkCom.a
 /Unreal/Plugins/AirSim/Source/AirLib/
 /Unreal/Environments/Blocks/Plugins/AirSim/
+/Unreal/Environments/Blocks/core
 /enc_temp_folder
 /cmake/MavLinkCom/MavLinkTest/MavLinkTest
 /cmake/MavLinkCom/lib/libMavLinkCom.a
