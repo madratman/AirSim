@@ -22,6 +22,15 @@ APIPCamera::APIPCamera(const FObjectInitializer& ObjectInitializer) : Super(Obje
             "", LogDebugLevel::Failure);
 
     PrimaryActorTick.bCanEverTick = true;
+
+    image_type_to_pixel_format_map_.Add(0, EPixelFormat::PF_B8G8R8A8);
+    image_type_to_pixel_format_map_.Add(1, EPixelFormat::PF_DepthStencil);// this throws an error. what are right formats for depth and infrared
+    image_type_to_pixel_format_map_.Add(2, EPixelFormat::PF_DepthStencil);
+    image_type_to_pixel_format_map_.Add(3, EPixelFormat::PF_DepthStencil);
+    image_type_to_pixel_format_map_.Add(4, EPixelFormat::PF_DepthStencil);
+    image_type_to_pixel_format_map_.Add(5, EPixelFormat::PF_B8G8R8A8);
+    image_type_to_pixel_format_map_.Add(6, EPixelFormat::PF_B8G8R8A8);
+    image_type_to_pixel_format_map_.Add(7, EPixelFormat::PF_R16F);
 }
 
 void APIPCamera::PostInitializeComponents()
@@ -258,8 +267,12 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
         const auto& noise_setting = camera_setting.noise_settings.at(image_type);
 
         if (image_type >= 0) { //scene capture components
-            updateCaptureComponentSetting(captures_[image_type], render_targets_[image_type],
-                capture_setting, ned_transform);
+            if (image_type==0)
+                updateCaptureComponentSetting(captures_[image_type], render_targets_[image_type], false, 
+                    image_type_to_pixel_format_map_[image_type], capture_setting, ned_transform);
+            else
+                updateCaptureComponentSetting(captures_[image_type], render_targets_[image_type], true, 
+                    image_type_to_pixel_format_map_[image_type], capture_setting, ned_transform);
 
             setNoiseMaterial(image_type, captures_[image_type], captures_[image_type]->PostProcessSettings, noise_setting);
         }
@@ -272,12 +285,20 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
 }
 
 void APIPCamera::updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
-    const CaptureSetting& setting, const NedTransform& ned_transform)
+    bool auto_format, const EPixelFormat& pixel_format, const CaptureSetting& setting, const NedTransform& ned_transform)
 {
     // assert that desired aspect ratio respect cine camera's sensor width and height?
     // unreal should add black bars in viewports, but it doesn't do that in render targets.  
     // camera_->SensorAspectRatio
-    render_target->InitAutoFormat(setting.width, setting.height); //256 X 144, X 480
+ 
+    if (auto_format)
+    {
+        render_target->InitAutoFormat(setting.width, setting.height); //256 X 144, X 480
+    }
+    else
+    {
+        render_target->InitCustomFormat(setting.width, setting.height, pixel_format, true);
+    }
     if (!std::isnan(setting.target_gamma))
         render_target->TargetGamma = setting.target_gamma;
 

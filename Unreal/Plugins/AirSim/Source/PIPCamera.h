@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Runtime/CinematicCamera/Public/CineCameraActor.h"
+#include "Runtime/Core/Public/PixelFormat.h"
 #include "Materials/Material.h"
 
 #include "common/ImageCaptureBase.hpp"
@@ -12,18 +13,15 @@
 
 #include "PIPCamera.generated.h"
 
-
 UCLASS()
 class AIRSIM_API APIPCamera : public ACineCameraActor
 {
     GENERATED_BODY()
 
-
 public:
     typedef msr::airlib::ImageCaptureBase::ImageType ImageType;
     typedef msr::airlib::AirSimSettings AirSimSettings;
     typedef AirSimSettings::CameraSetting CameraSetting;
-
 
     APIPCamera(const FObjectInitializer& ObjectInitializer);
 
@@ -45,7 +43,6 @@ public:
 
     msr::airlib::ProjectionMatrix getProjectionMatrix(const APIPCamera::ImageType image_type) const;
 
-
     USceneCaptureComponent2D* getCaptureComponent(const ImageType type, bool if_active);
     UTextureRenderTarget2D* getRenderTarget(const ImageType type, bool if_active);
 
@@ -65,6 +62,7 @@ private: //members
     FRotator gimbald_rotator_;
     float gimbal_stabilization_;
     const NedTransform* ned_transform_;
+    TMap<int, EPixelFormat> image_type_to_pixel_format_map_;
 
 private: //methods
     typedef common_utils::Utils Utils;
@@ -73,8 +71,8 @@ private: //methods
 
     static unsigned int imageTypeCount();
     void enableCaptureComponent(const ImageType type, bool is_enabled);
-    void updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, const CaptureSetting& setting, 
-        const NedTransform& ned_transform);
+    void updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
+        bool auto_format, const EPixelFormat& pixel_format, const CaptureSetting& setting, const NedTransform& ned_transform);
     void setNoiseMaterial(int image_type, UObject* outer, FPostProcessSettings& obj, const NoiseSetting& settings);
     void updateCameraPostProcessingSetting(FPostProcessSettings& obj, const CaptureSetting& setting);
     void updateCameraSetting(UCineCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform);
