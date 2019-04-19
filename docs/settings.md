@@ -1,10 +1,12 @@
 # AirSim Settings
 
 ## Where are Settings Stored?
-Windows: `Documents\AirSim`
-Linux: `~/Documents/AirSim`
+- Windows: `Documents\AirSim`
+- Linux: `~/Documents/AirSim`
 
-The file is in usual [json format](https://en.wikipedia.org/wiki/JSON). On first startup AirSim would create `settings.json` file with no settings. To avoid problems, always use ASCII format to save json file.
+The file is in the [JSON format](https://en.wikipedia.org/wiki/JSON).   
+On first startup AirSim would create `settings.json` file with no settings.   
+To avoid problems, always use ASCII format to save json file.
 
 ## How to Chose Between Car and Multirotor?
 The default is to use multirotor. To use car simple set `"SimMode": "Car"` like this:
@@ -19,9 +21,14 @@ The default is to use multirotor. To use car simple set `"SimMode": "Car"` like 
 To choose multirotor, set `"SimMode": "Multirotor"`. If you want to prompt user to select vehicle type then use `"SimMode": ""`.
 
 ## Available Settings and Their Defaults
-Below are complete list of settings available along with their default values. If any of the settings is missing from json file, then default value is used. Some default values are simply specified as `""` which means actual value may be chosen based on the vehicle you are using. For example, `ViewMode` setting has default value `""` which translates to `"FlyWithMe"` for drones and `"SpringArmChase"` for cars.
+Below is the complete list of settings available along with their default values.   
+If any of the settings is missing from the JSON file, the default value is used.   
+Some default values are simply specified as `""`, which means that the actual value may be chosen based on the vehicle you are using.   
+For example, `ViewMode` setting has default value `""` which translates to `"FlyWithMe"` for drones and `"SpringArmChase"` for cars.
 
-**WARNING:** Do not copy paste all of below in your settings.json. We strongly recommend adding only those settings that you don't want default values. Only required element is `"SettingsVersion"`.
+**WARNING:** Do not copy paste all of below in your settings.json.   
+We strongly recommend adding only those settings for whic you do not want default values.   
+The only required element is `"SettingsVersion"`.
 
 ```
 {
@@ -50,7 +57,17 @@ Below are complete list of settings available along with their default values. I
         "ImageType": 0,
         "Width": 256,
         "Height": 144,
-        "FOV_Degrees": 90,
+        "SensorHeight": 18.67, 
+        "SensorWidth": 24.89,
+        "FocalLength": 50.0,
+        "Fstop": 2.0,
+        "FocusDistance": 100000.0,
+        "MinimumFocusDistance": 15.0,
+        "DrawDebugFocusPlane": false,
+        "ConstrainAspectRatio": false,
+        "DepthOfFieldMethod": "DOFM_CircleDOF",
+        "CameraShutterSpeed": , 
+        "CameraISO": ,
         "AutoExposureSpeed": 100,
         "AutoExposureBias": 0,
         "AutoExposureMaxBrightness": 0.64,
