@@ -10,7 +10,7 @@
 #include "EngineUtils.h"
 #include "Runtime/Engine/Classes/Engine/StaticMesh.h"
 #include "UObjectIterator.h"
-#include "Camera/CameraComponent.h"
+#include "Runtime/CinematicCamera/Public/CineCameraComponent.h"
 //#include "Runtime/Foliage/Public/FoliageType.h"
 #include "MessageDialog.h"
 #include "Engine/LocalPlayer.h"
@@ -232,7 +232,7 @@ template UChildActorComponent* UAirBlueprintLib::GetActorComponent(AActor*, FStr
 template USceneCaptureComponent2D* UAirBlueprintLib::GetActorComponent(AActor*, FString);
 template UStaticMeshComponent* UAirBlueprintLib::GetActorComponent(AActor*, FString);
 template URotatingMovementComponent* UAirBlueprintLib::GetActorComponent(AActor*, FString);
-template UCameraComponent* UAirBlueprintLib::GetActorComponent(AActor*, FString);
+template UCineCameraComponent* UAirBlueprintLib::GetActorComponent(AActor*, FString);
 
 bool UAirBlueprintLib::IsInGameThread()
 {

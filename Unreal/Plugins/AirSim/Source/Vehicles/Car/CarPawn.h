@@ -19,7 +19,7 @@
 #include "CarPawn.generated.h"
 
 class UPhysicalMaterial;
-class UCameraComponent;
+class UCineCameraComponent;
 class USpringArmComponent;
 class UTextRenderComponent;
 class UInputComponent;

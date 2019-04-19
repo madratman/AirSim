@@ -118,7 +118,6 @@ public: //types
         int image_type = 0;
 
         unsigned int width = 256, height = 144; //960 X 540
-        float fov_degrees = Utils::nan<float>(); //90.0f
         int auto_exposure_method = -1;   //histogram
         float auto_exposure_speed = Utils::nan<float>(); // 100.0f;
         float auto_exposure_bias = Utils::nan<float>(); // 0;
@@ -132,6 +131,27 @@ public: //types
         float target_gamma = Utils::nan<float>(); //1.0f; //This would be reset to kSceneTargetGamma for scene as default
         int projection_mode = 0; // ECameraProjectionMode::Perspective
         float ortho_width = Utils::nan<float>();
+
+        // unreal's cinecamera has a lot of lens and filmback presets which can either be edited in the pipcamera bp or via settings.json
+        // see the INI file below for possible string values 
+        // https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Config/BaseEngine.ini#L2143
+        string FilmbackPresetName;
+        string LensPresetName;
+
+        // http://api.unrealengine.com/INT/API/Runtime/CinematicCamera/FCameraLensSettings/index.html
+        float FocalLength = Utils::nan<float>(); // 50.0f
+        float FocusDistance = Utils::nan<float>(); // 100000.0f
+        float MinimumFocusDistance = Utils::nan<float>(); // Shortest distance this lens can focus on. 15.f
+
+        float Fstop = Utils::nan<float>(); // 2.0f
+        float SensorHeight = Utils::nan<float>(); // Vertical size of filmback or digital sensor, in mm. 18.67 mm 
+        float SensorWidth = Utils::nan<float>(); // Horizontal size of filmback or digital sensor, in mm. 24.89 mm 
+        bool DrawDebugFocusPlane = false;
+        bool ConstrainAspectRatio = false;
+        string DepthOfFieldMethod = "DOFM_CircleDOF";
+
+        float CameraShutterSpeed = Utils::nan<float>();
+        float CameraISO = Utils::nan<float>();
     };
 
     struct NoiseSetting {
@@ -935,7 +955,27 @@ private:
     {
         capture_setting.width = settings_json.getInt("Width", capture_setting.width);
         capture_setting.height = settings_json.getInt("Height", capture_setting.height);
-        capture_setting.fov_degrees = settings_json.getFloat("FOV_Degrees", capture_setting.fov_degrees);
+        capture_setting.FilmbackPresetName = settings_json.getString("FilmbackPresetName", capture_setting.FilmbackPresetName);
+        capture_setting.LensPresetName = settings_json.getString("LensPresetName", capture_setting.LensPresetName);
+
+        // CameraFilmbackSettings
+        capture_setting.SensorWidth = settings_json.getFloat("SensorWidth", capture_setting.SensorWidth);
+        capture_setting.SensorHeight = settings_json.getFloat("SensorHeight", capture_setting.SensorHeight);
+        capture_setting.ConstrainAspectRatio = settings_json.getBool("ConstrainAspectRatio", capture_setting.ConstrainAspectRatio);
+
+        // CameraFocusSettings;
+        capture_setting.DrawDebugFocusPlane = settings_json.getBool("DrawDebugFocusPlane", capture_setting.DrawDebugFocusPlane);
+
+        // CameraLensSettings / depth of field 
+        capture_setting.DepthOfFieldMethod = settings_json.getString("DepthOfFieldMethod", capture_setting.DepthOfFieldMethod);
+        capture_setting.Fstop = settings_json.getFloat("Fstop", capture_setting.Fstop);
+        capture_setting.FocusDistance = settings_json.getFloat("FocusDistance", capture_setting.FocusDistance);
+        capture_setting.FocalLength = settings_json.getFloat("FocalLength", capture_setting.FocalLength);
+        capture_setting.MinimumFocusDistance = settings_json.getFloat("MinimumFocusDistance", capture_setting.MinimumFocusDistance);
+
+        capture_setting.CameraShutterSpeed = settings_json.getFloat("CameraShutterSpeed", capture_setting.CameraShutterSpeed);
+        capture_setting.CameraISO = settings_json.getFloat("CameraISO", capture_setting.CameraISO);
+
         capture_setting.auto_exposure_speed = settings_json.getFloat("AutoExposureSpeed", capture_setting.auto_exposure_speed);
         capture_setting.auto_exposure_bias = settings_json.getFloat("AutoExposureBias", capture_setting.auto_exposure_bias);
         capture_setting.auto_exposure_max_brightness = settings_json.getFloat("AutoExposureMaxBrightness", capture_setting.auto_exposure_max_brightness);
@@ -943,7 +983,7 @@ private:
         capture_setting.motion_blur_amount = settings_json.getFloat("MotionBlurAmount", capture_setting.motion_blur_amount);
         capture_setting.image_type = settings_json.getInt("ImageType", 0);
         capture_setting.target_gamma = settings_json.getFloat("TargetGamma", 
-            capture_setting.image_type == 0 ? CaptureSetting::kSceneTargetGamma : Utils::nan<float>());
+        capture_setting.image_type == 0 ? CaptureSetting::kSceneTargetGamma : Utils::nan<float>());
 
         std::string projection_mode = Utils::toLower(settings_json.getString("ProjectionMode", ""));
         if (projection_mode == "" || projection_mode == "perspective")

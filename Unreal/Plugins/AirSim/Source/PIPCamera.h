@@ -2,7 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "Camera/CameraActor.h"
+#include "Runtime/CinematicCamera/Public/CineCameraComponent.h"
+#include "Runtime/CinematicCamera/Public/CineCameraActor.h" 
 #include "Materials/Material.h"
 
 #include "common/ImageCaptureBase.hpp"
@@ -14,10 +15,10 @@
 
 
 UCLASS()
-class AIRSIM_API APIPCamera : public ACameraActor
+class AIRSIM_API APIPCamera : public ACineCameraActor
 {
     GENERATED_BODY()
-    
+
 
 public:
     typedef msr::airlib::ImageCaptureBase::ImageType ImageType;
@@ -25,7 +26,7 @@ public:
     typedef AirSimSettings::CameraSetting CameraSetting;
 
 
-    APIPCamera();
+    APIPCamera(const FObjectInitializer& ObjectInitializer);
 
     virtual void PostInitializeComponents() override;
     virtual void BeginPlay() override;
@@ -55,7 +56,7 @@ private: //members
     UPROPERTY() TArray<USceneCaptureComponent2D*> captures_;
     UPROPERTY() TArray<UTextureRenderTarget2D*> render_targets_;
 
-    UPROPERTY() UCameraComponent*  camera_;
+    UPROPERTY() UCineCameraComponent* camera_;
     //TMap<int, UMaterialInstanceDynamic*> noise_materials_;
     //below is needed because TMap doesn't work with UPROPERTY, but we do have -ve index
     UPROPERTY() TArray<UMaterialInstanceDynamic*> noise_materials_;
@@ -73,9 +74,9 @@ private: //methods
 
     static unsigned int imageTypeCount();
     void enableCaptureComponent(const ImageType type, bool is_enabled);
-    static void updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, const CaptureSetting& setting, 
+    void updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, const CaptureSetting& setting, 
         const NedTransform& ned_transform);
     void setNoiseMaterial(int image_type, UObject* outer, FPostProcessSettings& obj, const NoiseSetting& settings);
-    static void updateCameraPostProcessingSetting(FPostProcessSettings& obj, const CaptureSetting& setting);
-    static void updateCameraSetting(UCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform);
+    void updateCameraPostProcessingSetting(FPostProcessSettings& obj, const CaptureSetting& setting);
+    void updateCameraSetting(UCineCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform);
 };
