@@ -259,7 +259,7 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
         const auto& noise_setting = camera_setting.noise_settings.at(image_type);
 
         if (image_type >= 0) { //scene capture components
-            updateCaptureComponentSetting(captures_[image_type], render_targets_[image_type],
+            updateCaptureComponentSetting(camera_, captures_[image_type], render_targets_[image_type],
                 capture_setting, ned_transform);
 
             setNoiseMaterial(image_type, captures_[image_type], captures_[image_type]->PostProcessSettings, noise_setting);
@@ -282,7 +282,7 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
 
 }
 
-void APIPCamera::updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
+void APIPCamera::updateCaptureComponentSetting(UCineCameraComponent* camera, USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
     const CaptureSetting& setting, const NedTransform& ned_transform)
 {
     // assert that desired aspect ratio respect cine camera's sensor width and height?
@@ -295,7 +295,7 @@ void APIPCamera::updateCaptureComponentSetting(USceneCaptureComponent2D* capture
     capture->ProjectionType = static_cast<ECameraProjectionMode::Type>(setting.projection_mode);
 
     // get fov from UCineCameraComponent and map it to USceneCaptureComponent2D
-    capture->FOVAngle = camera_->GetHorizontalFieldOfView();
+    capture->FOVAngle = camera->GetHorizontalFieldOfView();
     // UE_LOG(LogTemp, Display, TEXT("camera_->GetHorizontalFieldOfView() %f"), camera_->GetHorizontalFieldOfView());
     if (capture->ProjectionType == ECameraProjectionMode::Orthographic && !std::isnan(setting.ortho_width))
         capture->OrthoWidth = ned_transform.fromNed(setting.ortho_width);

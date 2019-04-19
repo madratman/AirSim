@@ -74,9 +74,9 @@ private: //methods
 
     static unsigned int imageTypeCount();
     void enableCaptureComponent(const ImageType type, bool is_enabled);
-    void updateCaptureComponentSetting(USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, const CaptureSetting& setting, 
-        const NedTransform& ned_transform);
+    static void updateCaptureComponentSetting(UCineCameraComponent* camera, USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
+        const CaptureSetting& setting,  const NedTransform& ned_transform);
     void setNoiseMaterial(int image_type, UObject* outer, FPostProcessSettings& obj, const NoiseSetting& settings);
-    void updateCameraPostProcessingSetting(FPostProcessSettings& obj, const CaptureSetting& setting);
-    void updateCameraSetting(UCineCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform);
+    static void updateCameraPostProcessingSetting(FPostProcessSettings& obj, const CaptureSetting& setting);
+    static void updateCameraSetting(UCineCameraComponent* camera, const CaptureSetting& setting, const NedTransform& ned_transform);
 };
