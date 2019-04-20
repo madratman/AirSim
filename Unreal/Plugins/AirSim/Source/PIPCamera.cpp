@@ -254,32 +254,26 @@ void APIPCamera::setupCameraFromSettings(const APIPCamera::CameraSetting& camera
         this->SetActorTickEnabled(false);
 
     int image_count = static_cast<int>(Utils::toNumeric(ImageType::Count));
+
     for (int image_type = -1; image_type < image_count; ++image_type) {
         const auto& capture_setting = camera_setting.capture_settings.at(image_type);
         const auto& noise_setting = camera_setting.noise_settings.at(image_type);
 
         if (image_type >= 0) { //scene capture components
+            updateCameraSetting(camera_, capture_setting, ned_transform);
+            setNoiseMaterial(image_type, camera_, camera_->PostProcessSettings, noise_setting);
+
             updateCaptureComponentSetting(camera_, captures_[image_type], render_targets_[image_type],
                 capture_setting, ned_transform);
 
             setNoiseMaterial(image_type, captures_[image_type], captures_[image_type]->PostProcessSettings, noise_setting);
         }
-        else { //camera component
+        else { // viewport camera component
             updateCameraSetting(camera_, capture_setting, ned_transform);
 
             setNoiseMaterial(image_type, camera_, camera_->PostProcessSettings, noise_setting);
         }
     }
-
-    UAirBlueprintLib::LogMessage(TEXT("Camera: "), GetName(), LogDebugLevel::Informational);
-    UE_LOG(LogTemp, Display, TEXT("camera_->GetHorizontalFieldOfView() %f"), camera_->GetHorizontalFieldOfView());
-    UE_LOG(LogTemp, Display, TEXT("camera_->GetVerticalFieldOfView() %f"), camera_->GetVerticalFieldOfView());
-    UE_LOG(LogTemp, Display, TEXT("camera_->CurrentAperture %f"), camera_->CurrentAperture);
-    UE_LOG(LogTemp, Display, TEXT("camera_->CurrentFocalLength %f"), camera_->CurrentFocalLength);
-    UE_LOG(LogTemp, Display, TEXT("camera_->CurrentFocusDistance %f"), camera_->CurrentFocusDistance);
-    UE_LOG(LogTemp, Display, TEXT("camera_->CurrentHorizontalFOV %f"), camera_->CurrentHorizontalFOV);
-    UE_LOG(LogTemp, Display, TEXT("\n"));
-
 }
 
 void APIPCamera::updateCaptureComponentSetting(UCineCameraComponent* camera, USceneCaptureComponent2D* capture, UTextureRenderTarget2D* render_target, 
@@ -311,14 +305,23 @@ void APIPCamera::updateCameraSetting(UCineCameraComponent* camera, const Capture
         camera->SetOrthoWidth(ned_transform.fromNed(setting.ortho_width));
 
     if (!setting.FilmbackPresetName.empty())
+    {
+        FString blabla(setting.FilmbackPresetName.c_str());
         camera->SetFilmbackPresetByName(FString(setting.FilmbackPresetName.c_str()));
+    }
     if (!setting.LensPresetName.empty())
+    {
         camera->SetLensPresetByName(FString(setting.LensPresetName.c_str()));
+    }
 
     if (!std::isnan(setting.SensorHeight))
+    {
         camera->FilmbackSettings.SensorHeight = setting.SensorHeight;
+    }
     if (!std::isnan(setting.SensorWidth))
+    {
         camera->FilmbackSettings.SensorWidth = setting.SensorWidth;
+    }
 
     if (!std::isnan(setting.Fstop))
     {
@@ -333,6 +336,7 @@ void APIPCamera::updateCameraSetting(UCineCameraComponent* camera, const Capture
         camera->CurrentFocalLength = setting.FocalLength;        
     }
 
+    camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
     if (!std::isnan(setting.FocusDistance))
     {
        camera->FocusSettings.ManualFocusDistance = setting.FocusDistance;
@@ -341,16 +345,14 @@ void APIPCamera::updateCameraSetting(UCineCameraComponent* camera, const Capture
     if (!std::isnan(setting.MinimumFocusDistance))
         camera->LensSettings.MinimumFocusDistance = setting.MinimumFocusDistance;
 
-    if (setting.DrawDebugFocusPlane)
+    if (!std::isnan(setting.DrawDebugFocusPlane))
     {
-        camera->FocusSettings.bDrawDebugFocusPlane = 1;
+        camera->FocusSettings.bDrawDebugFocusPlane = setting.DrawDebugFocusPlane;
         camera->UpdateDebugFocusPlane();
     }
     
-    if (setting.ConstrainAspectRatio)
-        camera->bConstrainAspectRatio = 1;
-
-    camera->FocusSettings.FocusMethod = ECameraFocusMethod::Manual;
+    if (!std::isnan(setting.ConstrainAspectRatio))
+        camera->bConstrainAspectRatio = setting.ConstrainAspectRatio;
 
     updateCameraPostProcessingSetting(camera->PostProcessSettings, setting);
 

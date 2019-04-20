@@ -146,8 +146,8 @@ public: //types
         float Fstop = Utils::nan<float>(); // 2.0f
         float SensorHeight = Utils::nan<float>(); // Vertical size of filmback or digital sensor, in mm. 18.67 mm 
         float SensorWidth = Utils::nan<float>(); // Horizontal size of filmback or digital sensor, in mm. 24.89 mm 
-        bool DrawDebugFocusPlane = false;
-        bool ConstrainAspectRatio = false;
+        int DrawDebugFocusPlane = 0;
+        int ConstrainAspectRatio = 0;
         string DepthOfFieldMethod = "DOFM_CircleDOF";
 
         float CameraShutterSpeed = Utils::nan<float>();
@@ -961,10 +961,10 @@ private:
         // CameraFilmbackSettings
         capture_setting.SensorWidth = settings_json.getFloat("SensorWidth", capture_setting.SensorWidth);
         capture_setting.SensorHeight = settings_json.getFloat("SensorHeight", capture_setting.SensorHeight);
-        capture_setting.ConstrainAspectRatio = settings_json.getBool("ConstrainAspectRatio", capture_setting.ConstrainAspectRatio);
+        capture_setting.ConstrainAspectRatio = settings_json.getInt("ConstrainAspectRatio", capture_setting.ConstrainAspectRatio);
 
         // CameraFocusSettings;
-        capture_setting.DrawDebugFocusPlane = settings_json.getBool("DrawDebugFocusPlane", capture_setting.DrawDebugFocusPlane);
+        capture_setting.DrawDebugFocusPlane = settings_json.getInt("DrawDebugFocusPlane", capture_setting.DrawDebugFocusPlane);
 
         // CameraLensSettings / depth of field 
         capture_setting.DepthOfFieldMethod = settings_json.getString("DepthOfFieldMethod", capture_setting.DepthOfFieldMethod);
