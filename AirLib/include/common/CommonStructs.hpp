@@ -305,5 +305,16 @@ struct LidarData {
     {}
 };
 
+struct ImuData {
+
+    TTimePoint time_stamp = 0;
+    Quaternionr orientation;
+    Vector3r angular_velocity;
+    Vector3r linear_acceleration;
+
+    ImuData()
+    {}
+};
+
 }} //namespace
 #endif

@@ -500,6 +500,38 @@ public:
             return d;
         }
     };
+
+    struct ImuData {
+        msr::airlib::TTimePoint time_stamp;
+        Quaternionr orientation;
+        Vector3r angular_velocity;
+        Vector3r linear_acceleration;
+
+        MSGPACK_DEFINE_MAP(time_stamp, orientation, angular_velocity, linear_acceleration);
+
+        ImuData()
+        {}
+
+        ImuData(const msr::airlib::ImuData& s)
+        {
+            time_stamp = s.time_stamp;
+            orientation = s.orientation;
+            angular_velocity = s.angular_velocity;
+            linear_acceleration = s.linear_acceleration;
+        }
+
+        msr::airlib::ImuData to() const
+        {
+            msr::airlib::ImuData d;
+
+            d.time_stamp = timestamp;
+            d.orientation = orientation.to();
+            d.angular_velocity = angular_velocity.to();
+            d.linear_acceleration = linear_acceleration.to();
+
+            return d;
+        }
+    };
 };
 
 }} //namespace
