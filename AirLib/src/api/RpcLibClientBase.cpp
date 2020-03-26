@@ -40,7 +40,7 @@ STRICT_MODE_OFF
 STRICT_MODE_ON
 #ifdef _MSC_VER
 __pragma(warning( disable : 4239))
-#endif			  
+#endif            
 
 
 namespace msr { namespace airlib {
@@ -238,8 +238,8 @@ vector<uint8_t> RpcLibClientBase::simGetImage(const std::string& camera_name, Im
 }
 
 vector<MeshResponse> RpcLibClientBase::simGetMeshes() {
-	const auto& response_adaptor = pimpl_->client.call("simGetMeshes").as<vector<RpcLibAdapatorsBase::MeshResponse>>();
-	return RpcLibAdapatorsBase::MeshResponse::to(response_adaptor);
+    const auto& response_adaptor = pimpl_->client.call("simGetMeshes").as<vector<RpcLibAdapatorsBase::MeshResponse>>();
+    return RpcLibAdapatorsBase::MeshResponse::to(response_adaptor);
 }
 
 void RpcLibClientBase::simPrintLogMessage(const std::string& message, std::string message_param, unsigned char  severity)
@@ -342,7 +342,7 @@ vector<string> RpcLibClientBase::simListSceneObjects(const string& name_regex) c
 
 std::vector<std::string> RpcLibClientBase::simSwapTextures(const std::string& tags, int tex_id, int component_id, int material_id)
 {
-	return pimpl_->client.call("simSwapTextures", tags, tex_id, component_id, material_id).as<vector<string>>();
+    return pimpl_->client.call("simSwapTextures", tags, tex_id, component_id, material_id).as<vector<string>>();
 }
 
 msr::airlib::Pose RpcLibClientBase::simGetObjectPose(const std::string& object_name) const

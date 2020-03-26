@@ -115,7 +115,7 @@ struct Accelerations {
 
 struct PoseWithCovariance {
     VectorMath::Pose pose;
-    vector<real_T> covariance;	//36 elements, 6x6 matrix
+    vector<real_T> covariance;  //36 elements, 6x6 matrix
 
     PoseWithCovariance()
         : covariance(36, 0)
@@ -128,7 +128,7 @@ struct PowerSupply {
 
 struct TwistWithCovariance {
     Twist twist;
-    vector<real_T> covariance;	//36 elements, 6x6 matrix
+    vector<real_T> covariance;  //36 elements, 6x6 matrix
 
     TwistWithCovariance()
         : covariance(36, 0)
@@ -307,12 +307,12 @@ struct LidarData {
 
 struct MeshResponse {
 
-	Vector3r position;
-	Quaternionr orientation;
+    Vector3r position;
+    Quaternionr orientation;
 
-	std::vector<float> vertices;
-	std::vector<uint32_t> indices;
-	std::string name;
+    std::vector<float> vertices;
+    std::vector<uint32_t> indices;
+    std::string name;
 };
 
 }} //namespace

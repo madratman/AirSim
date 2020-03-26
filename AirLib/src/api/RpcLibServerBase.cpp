@@ -137,10 +137,10 @@ RpcLibServerBase::RpcLibServerBase(ApiProvider* api_provider, const std::string&
         return result;
     });
 
-	pimpl_->server.bind("simGetMeshes", [&]() ->vector<RpcLibAdapatorsBase::MeshResponse> {
-		const auto& response = getWorldSimApi()->getMeshes();
-		return RpcLibAdapatorsBase::MeshResponse::from(response);
-	});
+    pimpl_->server.bind("simGetMeshes", [&]() ->vector<RpcLibAdapatorsBase::MeshResponse> {
+        const auto& response = getWorldSimApi()->getMeshes();
+        return RpcLibAdapatorsBase::MeshResponse::from(response);
+    });
 
     pimpl_->server.
         bind("simSetVehiclePose", [&](const RpcLibAdapatorsBase::Pose &pose, bool ignore_collision, const std::string& vehicle_name) -> void {
@@ -364,9 +364,9 @@ RpcLibServerBase::RpcLibServerBase(ApiProvider* api_provider, const std::string&
         return r;
     });
 
-	pimpl_->server.bind("simSwapTextures", [&](const std::string tag, int tex_id, int component_id, int material_id) -> std::vector<string> {
-		return *getWorldSimApi()->swapTextures(tag, tex_id, component_id, material_id);
-	});
+    pimpl_->server.bind("simSwapTextures", [&](const std::string tag, int tex_id, int component_id, int material_id) -> std::vector<string> {
+        return *getWorldSimApi()->swapTextures(tag, tex_id, component_id, material_id);
+    });
 
     //if we don't suppress then server will bomb out for exceptions raised by any method
     pimpl_->server.suppress_exceptions(true);
