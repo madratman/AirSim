@@ -6,11 +6,14 @@
 		},
 		{
 			"name": "UE4",
-			"path": "/home/ue4/ue-4.25.0-linux-debugeditor"
+			"path": "/home/ue4/ue-4.25.1-linux-debugeditor"
 		}
 	],
 	"settings": {
-		"typescript.tsc.autoDetect": "off"
+		"typescript.tsc.autoDetect": "off",
+		"files.associations": {
+			"thread": "cpp"
+		}
 	},
 	"extensions": {
 		"recommendations": [
